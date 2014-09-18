@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Atmel Studio Solution File, Format Version 11.00
+Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "driver", "driver\driver.cproj", "{B8BB71DE-B448-43ED-B932-4AEB6756F2FC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|AVR = Debug|AVR
+		Release|AVR = Release|AVR
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B8BB71DE-B448-43ED-B932-4AEB6756F2FC}.Debug|AVR.ActiveCfg = Debug|AVR
+		{B8BB71DE-B448-43ED-B932-4AEB6756F2FC}.Debug|AVR.Build.0 = Debug|AVR
+		{B8BB71DE-B448-43ED-B932-4AEB6756F2FC}.Release|AVR.ActiveCfg = Release|AVR
+		{B8BB71DE-B448-43ED-B932-4AEB6756F2FC}.Release|AVR.Build.0 = Release|AVR
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
