@@ -12,7 +12,7 @@
 #include <util/delay.h>
 #include "Initialize.h"
 #define _Freq (1.0/(2.0*3.14*2.0))
-#define setpoint (M.RPM_setpointA & 0x0ff)|((M.RPM_setpointB<<8)& 0xff00)//1500//
+#define setpoint ((M.RPM_setpointA<<8)& 0xff00) | (M.RPM_setpointB & 0x0ff)//1500//
 
 char slave_address=0;
 char send_buff;
@@ -421,9 +421,9 @@ if ((status & (FRAMING_ERROR | PARITY_ERROR | DATA_OVERRUN))==0)
 		case 7:
 		case 8:
 		case 9:
-		if(slave_address*2 == pck_num-3)
+		if(slave_address * 2 + 2 == pck_num)
 		tmp_rpmA=data;
-		if(slave_address*2 == pck_num-2)
+		if(slave_address * 2 + 3 == pck_num)
 		tmp_rpmB=data;
 		
 		pck_num++;

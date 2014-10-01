@@ -1,0 +1,229 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectVersion>6.2</ProjectVersion>
+    <ToolchainName>com.Atmel.AVRGCC8.C</ToolchainName>
+    <ProjectGuid>{b8bb71de-b448-43ed-b932-4aeb6756f2fc}</ProjectGuid>
+    <avrdevice>ATmega88PA</avrdevice>
+    <avrdeviceseries>none</avrdeviceseries>
+    <OutputType>Executable</OutputType>
+    <Language>C</Language>
+    <OutputFileName>$(MSBuildProjectName)</OutputFileName>
+    <OutputFileExtension>.elf</OutputFileExtension>
+    <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
+    <AssemblyName>driver</AssemblyName>
+    <Name>driver</Name>
+    <RootNamespace>driver</RootNamespace>
+    <ToolchainFlavour>Native</ToolchainFlavour>
+    <KeepTimersRunning>true</KeepTimersRunning>
+    <OverrideVtor>false</OverrideVtor>
+    <OverrideVtorValue />
+    <eraseonlaunchrule>0</eraseonlaunchrule>
+    <AsfVersion>2.9.0</AsfVersion>
+    <AsfFrameworkConfig>
+      <framework-data xmlns="">
+        <options>
+          <option id="mega.drivers.adc" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="common.boards" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="mega.drivers.ioport" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="common.utils.interrupt" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="mega.drivers.cpu" value="Add" config="" content-id="Atmel.ASF" />
+        </options>
+        <configurations />
+        <files>
+          <file path="src/asf/common/boards/board.h" framework="" version="" source="common\boards\board.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/mega/drivers/cpu/mega_reset_cause.h" framework="" version="" source="mega\drivers\cpu\mega_reset_cause.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/services/ioport/ioport.h" framework="" version="" source="common\services\ioport\ioport.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/services/ioport/mega/ioport.h" framework="" version="" source="common\services\ioport\mega\ioport.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/utils/interrupt.h" framework="" version="" source="common\utils\interrupt.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/utils/interrupt/interrupt_avr8.h" framework="" version="" source="common\utils\interrupt\interrupt_avr8.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/utils/parts.h" framework="" version="" source="common\utils\parts.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/mega/drivers/adc/adc.h" framework="" version="" source="mega\drivers\adc\adc.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/mega/drivers/adc/adc_megaxx8.h" framework="" version="" source="mega\drivers\adc\adc_megaxx8.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/mega/utils/compiler.h" framework="" version="" source="mega\utils\compiler.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/mega/utils/status_codes.h" framework="" version="" source="mega\utils\status_codes.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/mega/utils/progmem.h" framework="" version="" source="mega\utils\progmem.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/mega/utils/assembler.h" framework="" version="" source="mega\utils\assembler.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/mega/utils/assembler/gas.h" framework="" version="" source="mega\utils\assembler\gas.h" changed="False" content-id="Atmel.ASF" />
+        </files>
+        <documentation help="" />
+      </framework-data>
+    </AsfFrameworkConfig>
+    <avrtoolinterface />
+    <avrtool>com.atmel.avrdbg.tool.simulator</avrtool>
+    <com_atmel_avrdbg_tool_simulator>
+      <ToolType xmlns="">com.atmel.avrdbg.tool.simulator</ToolType>
+      <ToolName xmlns="">AVR Simulator</ToolName>
+      <ToolNumber xmlns="">
+      </ToolNumber>
+      <KeepTimersRunning xmlns="">true</KeepTimersRunning>
+      <OverrideVtor xmlns="">false</OverrideVtor>
+      <OverrideVtorValue xmlns="">
+      </OverrideVtorValue>
+      <Channel xmlns="">
+        <host>127.0.0.1</host>
+        <port>12043</port>
+        <ssl>False</ssl>
+      </Channel>
+    </com_atmel_avrdbg_tool_simulator>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <ToolchainSettings>
+      <AvrGcc xmlns="">
+  <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
+  <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
+  <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
+  <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
+  <avrgcc.common.outputfiles.usersignatures>False</avrgcc.common.outputfiles.usersignatures>
+  <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcc.compiler.directories.IncludePaths>
+    <ListValues>
+      <Value>../src/asf/common/boards</Value>
+      <Value>../src/asf/mega/drivers/cpu</Value>
+      <Value>../src/asf/common/services/ioport</Value>
+      <Value>../src/asf/common/utils</Value>
+      <Value>../src/asf/mega/drivers/adc</Value>
+      <Value>../src/asf/mega/utils</Value>
+    </ListValues>
+  </avrgcc.compiler.directories.IncludePaths>
+  <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
+  <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
+  <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
+  <avrgcc.linker.libraries.Libraries>
+    <ListValues>
+      <Value>libm</Value>
+    </ListValues>
+  </avrgcc.linker.libraries.Libraries>
+  <avrgcc.assembler.general.IncludePaths>
+    <ListValues>
+      <Value>../src/asf/common/boards</Value>
+      <Value>../src/asf/mega/drivers/cpu</Value>
+      <Value>../src/asf/common/services/ioport</Value>
+      <Value>../src/asf/common/utils</Value>
+      <Value>../src/asf/mega/drivers/adc</Value>
+      <Value>../src/asf/mega/utils</Value>
+    </ListValues>
+  </avrgcc.assembler.general.IncludePaths>
+</AvrGcc>
+    </ToolchainSettings>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <ToolchainSettings>
+      <AvrGcc xmlns="">
+  <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
+  <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
+  <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
+  <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
+  <avrgcc.common.outputfiles.usersignatures>False</avrgcc.common.outputfiles.usersignatures>
+  <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcc.compiler.directories.IncludePaths>
+    <ListValues>
+      <Value>../src</Value>
+      <Value>../src/asf/common/boards</Value>
+      <Value>../src/asf/mega/drivers/cpu</Value>
+      <Value>../src/asf/common/services/ioport</Value>
+      <Value>../src/asf/common/utils</Value>
+      <Value>../src/asf/mega/drivers/adc</Value>
+      <Value>../src/asf/mega/utils</Value>
+    </ListValues>
+  </avrgcc.compiler.directories.IncludePaths>
+  <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
+  <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
+  <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcc.compiler.optimization.DebugLevel>Default (-g2)</avrgcc.compiler.optimization.DebugLevel>
+  <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
+  <avrgcc.linker.libraries.Libraries>
+    <ListValues>
+      <Value>libm</Value>
+    </ListValues>
+  </avrgcc.linker.libraries.Libraries>
+  <avrgcc.assembler.general.IncludePaths>
+    <ListValues>
+      <Value>../src/asf/common/boards</Value>
+      <Value>../src/asf/mega/drivers/cpu</Value>
+      <Value>../src/asf/common/services/ioport</Value>
+      <Value>../src/asf/common/utils</Value>
+      <Value>../src/asf/mega/drivers/adc</Value>
+      <Value>../src/asf/mega/utils</Value>
+    </ListValues>
+  </avrgcc.assembler.general.IncludePaths>
+  <avrgcc.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcc.assembler.debugging.DebugLevel>
+</AvrGcc>
+    </ToolchainSettings>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="driver.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="initialize.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="src\asf.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\mega\utils\assembler\gas.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\mega\utils\assembler.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\mega\utils\progmem.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\mega\utils\status_codes.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\mega\utils\compiler.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\mega\drivers\adc\adc_megaxx8.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\mega\drivers\adc\adc.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\common\utils\parts.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\common\utils\interrupt\interrupt_avr8.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\common\utils\interrupt.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\common\services\ioport\mega\ioport.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\common\services\ioport\ioport.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\mega\drivers\cpu\mega_reset_cause.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\common\boards\board.h">
+      <SubType>compile</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="src\" />
+    <Folder Include="src\asf\" />
+    <Folder Include="src\asf\common\" />
+    <Folder Include="src\asf\common\boards\" />
+    <Folder Include="src\asf\common\services\" />
+    <Folder Include="src\asf\common\services\ioport\" />
+    <Folder Include="src\asf\common\services\ioport\mega\" />
+    <Folder Include="src\asf\common\utils\" />
+    <Folder Include="src\asf\common\utils\interrupt\" />
+    <Folder Include="src\asf\mega\" />
+    <Folder Include="src\asf\mega\drivers\" />
+    <Folder Include="src\asf\mega\drivers\adc\" />
+    <Folder Include="src\asf\mega\drivers\cpu\" />
+    <Folder Include="src\asf\mega\utils\" />
+    <Folder Include="src\asf\mega\utils\assembler\" />
+  </ItemGroup>
+  <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />
+</Project>
