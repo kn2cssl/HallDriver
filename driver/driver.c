@@ -536,29 +536,29 @@ void send_reply(void)
 	Transmission_Data_4 = M.d;
 		
 	USART_send ('*');
-		
-	send_buff = (((int)Transmission_Data_1) & 0x0ff) ;//HALL1;
+	
+	send_buff = ( ( ( (int) Transmission_Data_1 ) & 0x0ff00 ) >>8 ) ;
 	USART_send ( send_buff ) ;
-		
-	send_buff = ( ( ( (int) Transmission_Data_1 ) & 0x0ff00 ) >>8 ) ;//HALL2;
+	
+	send_buff = (((int)Transmission_Data_1) & 0x0ff) ;
 	USART_send ( send_buff ) ;
-		
-	send_buff = (((int)Transmission_Data_2) & 0x0ff) ;//HALL1;
-	USART_send ( send_buff ) ;
-		
+	
 	send_buff = ( ( ( (int) Transmission_Data_2 ) & 0x0ff00 ) >>8 ) ;//HALL2;
 	USART_send ( send_buff ) ;
-		
-	send_buff = (((int)Transmission_Data_3) & 0x0ff) ;//HALL1;
+	
+	send_buff = (((int)Transmission_Data_2) & 0x0ff) ;//HALL1;
 	USART_send ( send_buff ) ;
-		
+	
 	send_buff = ( ( ( (int) Transmission_Data_3 ) & 0x0ff00 ) >>8 ) ;//HALL2;
 	USART_send ( send_buff ) ;
-		
-	send_buff = (((int)Transmission_Data_4) & 0x0ff) ;//HALL1;
+	
+	send_buff = (((int)Transmission_Data_3) & 0x0ff) ;//HALL1;
 	USART_send ( send_buff ) ;
-		
+	
 	send_buff = ( ( ( (int) Transmission_Data_4 ) & 0x0ff00 ) >>8 ) ;//HALL2;
+	USART_send ( send_buff ) ;
+	
+	send_buff = (((int)Transmission_Data_4) & 0x0ff) ;//HALL1;
 	USART_send ( send_buff ) ;
 		
 	USART_send ('#') ;
