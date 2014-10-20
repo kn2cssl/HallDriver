@@ -14,6 +14,10 @@
 #define _Freq (1.0/(2.0*3.14*2.0))
 #define setpoint ((M.RPM_setpointA<<8)& 0xff00) | (M.RPM_setpointB & 0x0ff)//1500//
 
+unsigned char adc;
+float adc_I,adc_I_1;
+int flg_ask=0,current_ov=0;
+
 char slave_address=0;
 char send_buff;
 char str[100];
@@ -47,7 +51,21 @@ struct Motor_Param
 	int psin;
 }M;
 
+#define ADC_VREF_TYPE 0x00
 
+// Read the AD conversion result
+unsigned int read_adc(unsigned char adc_input)
+{
+	ADMUX=adc_input | (ADC_VREF_TYPE & 0xff);
+	// Delay needed for the stabilization of the ADC input voltage
+	_delay_us(10);
+	// Start the AD conversion
+	ADCSRA|=0x40;
+	// Wait for the AD conversion to complete
+	while ((ADCSRA & 0x10)==0);
+	ADCSRA|=0x10;
+	return ADCW;
+}
 
 int main(void)
 {  
@@ -61,10 +79,10 @@ PORTB=0x00;
 DDRB=0x3F;
 
 // Port C initialization
-// Func6=In Func5=In Func4=In Func3=In Func2=In Func1=In Func0=In
-// State6=T State5=T State4=T State3=T State2=T State1=T State0=T
+// Func6=In Func5=Out Func4=Out Func3=In Func2=In Func1=In Func0=In
+// State6=T State5=0 State4=0 State3=T State2=T State1=T State0=T
 PORTC=0x00;
-DDRC=0x00;
+DDRC=0x30;
 
 // Port D initialization
 // Func7=In Func6=Out Func5=In Func4=Out Func3=Out Func2=In Func1=Out Func0=In
@@ -163,8 +181,14 @@ ADCSRB=0x00;
 DIDR1=0x00;
 
 // ADC initialization
-// ADC disabled
-ADCSRA=0x00;
+// ADC Clock frequency: 62.500 kHz
+// ADC Voltage Reference: AREF pin
+// ADC Auto Trigger Source: ADC Stopped
+// Digital input buffers on ADC0: On, ADC1: On, ADC2: On, ADC3: On
+// ADC4: On, ADC5: On
+DIDR0=0x00;
+ADMUX=ADC_VREF_TYPE & 0xff;
+ADCSRA=0x87;
 
 // SPI initialization
 // SPI disabled
@@ -192,6 +216,11 @@ DDRC|=(1<<PINC5);
     while(1)
     {
 		asm("wdr");
+		
+		adc_I_1=adc_I;
+        adc= (char)(read_adc(7)&0x00ff);
+        adc_I=adc*8.65;//*34.732;
+        adc_I = adc_I_1 + /*((0.01/(f+0.01))*/ (0.02*(float)(adc_I-adc_I_1));
 
 					if( test_driver == slave_address )
 					{
@@ -386,6 +415,7 @@ inline int PID_CTRL()
 	return 0;
 		
 	return M.PID;
+	//return setpoint*255/4000;  // PWM whithout PID controller
 	
 }
 
