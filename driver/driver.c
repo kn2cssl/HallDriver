@@ -17,12 +17,13 @@
 unsigned char adc;
 float adc_I,adc_I_1;
 int flg_ask=0,current_ov=0;
+int t,t_10ms=0;
 
 char slave_address=0;
 char send_buff;
 char str[100];
 int hall_flag=0,hall_dir=0;
-uint16_t counter=0;
+uint16_t counter=0,count=0;;
 int PWM;
 int usart_change;
 int Transmission_Data_1,Transmission_Data_2,Transmission_Data_3,Transmission_Data_4;
@@ -180,6 +181,10 @@ ACSR=0x80;
 ADCSRB=0x00;
 DIDR1=0x00;
 
+//// ADC initialization
+//// ADC disabled
+//ADCSRA=0x00;
+
 // ADC initialization
 // ADC Clock frequency: 62.500 kHz
 // ADC Voltage Reference: AREF pin
@@ -217,10 +222,32 @@ DDRC|=(1<<PINC5);
     {
 		asm("wdr");
 		
-		adc_I_1=adc_I;
-        adc= (char)(read_adc(7)&0x00ff);
-        adc_I=adc*8.65;//*34.732;
-        adc_I = adc_I_1 + /*((0.01/(f+0.01))*/ (0.02*(float)(adc_I-adc_I_1));
+		if (t_10ms)
+		{
+			t_10ms=0;
+			adc_I_1=adc_I;
+			adc= (char)(read_adc(7)&0x00ff);
+			adc_I=adc*8.65;//*34.732;	
+			adc_I = adc_I_1 + /*((0.01/(f+0.01))*/ (0.02*(float)(adc_I-adc_I_1));
+	
+			if (adc_I>=1500)
+			{
+				count++;
+				send_reply();
+				if (count>5)// && count<200)
+				{
+					Motor_Free ='%';
+					current_ov=1;
+					WRITE_PORT(PORTC,4, current_ov);
+					count=0;
+					count++;
+				}
+			}
+			else
+			count=0;
+		
+		}
+       
 
 					if( test_driver == slave_address )
 					{
@@ -414,7 +441,7 @@ inline int PID_CTRL()
 	if((setpoint)==0 && abs(M.RPM-(setpoint))<10)
 	return 0;
 		
-	return M.PID;
+	return M.PID;//
 	//return setpoint*255/4000;  // PWM whithout PID controller
 	
 }
@@ -517,10 +544,16 @@ ISR(TIMER1_OVF_vect)
 {
 	TCNT1H=0xfc;
 	TCNT1L=0x17;
-	
+	t++;
+	if (t>=10)
+	{
+		t_10ms=1;
+		t=0;
+	}
 	if (counter<200)
 	{
 		counter++;
+		count=0;
 	}
 	
 	T_20ms() ;
@@ -547,6 +580,8 @@ ISR(TIMER1_OVF_vect)
 		Motor_Direction = 0 ;
 	}	
 	Motor_Update ( PWM , Motor_Direction ) ;
+	
+	
 }
 
 
@@ -555,13 +590,14 @@ void T_20ms(void)
 	M.HSpeed = (float) ( hall_flag * 1250 ) ;	//62.50=60s/(20ms*48)	48 = 3(number of hall sensors) * 8(number of pair poles) * 2
 	M.HSpeed = ( hall_dir ) ? - M.HSpeed : M.HSpeed ;
 	hall_flag = 0 ;
+	
 }
 
 void send_reply(void)
 {   
 	
-	Transmission_Data_1 = M.RPM;
-	Transmission_Data_2 = M.PID;
+	Transmission_Data_1 = adc_I;
+	Transmission_Data_2 = slave_address;
 	Transmission_Data_3 = M.kp;
 	Transmission_Data_4 = M.d;
 		
@@ -579,17 +615,17 @@ void send_reply(void)
 	send_buff = (((int)Transmission_Data_2) & 0x0ff) ;//HALL1;
 	USART_send ( send_buff ) ;
 	
-	send_buff = ( ( ( (int) Transmission_Data_3 ) & 0x0ff00 ) >>8 ) ;//HALL2;
-	USART_send ( send_buff ) ;
-	
-	send_buff = (((int)Transmission_Data_3) & 0x0ff) ;//HALL1;
-	USART_send ( send_buff ) ;
-	
-	send_buff = ( ( ( (int) Transmission_Data_4 ) & 0x0ff00 ) >>8 ) ;//HALL2;
-	USART_send ( send_buff ) ;
-	
-	send_buff = (((int)Transmission_Data_4) & 0x0ff) ;//HALL1;
-	USART_send ( send_buff ) ;
+	//send_buff = ( ( ( (int) Transmission_Data_3 ) & 0x0ff00 ) >>8 ) ;//HALL2;
+	//USART_send ( send_buff ) ;
+	//
+	//send_buff = (((int)Transmission_Data_3) & 0x0ff) ;//HALL1;
+	//USART_send ( send_buff ) ;
+	//
+	//send_buff = ( ( ( (int) Transmission_Data_4 ) & 0x0ff00 ) >>8 ) ;//HALL2;
+	//USART_send ( send_buff ) ;
+	//
+	//send_buff = (((int)Transmission_Data_4) & 0x0ff) ;//HALL1;
+	//USART_send ( send_buff ) ;
 		
 	USART_send ('#') ;
 }
