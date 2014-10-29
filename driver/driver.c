@@ -19,6 +19,8 @@ char send_buff;
 char str[100];
 int hall_flag=0,hall_dir=0;
 uint16_t counter=0;
+uint64_t TIME=0;
+int time_counter=0;
 int PWM;
 int usart_change;
 int Transmission_Data_1,Transmission_Data_2,Transmission_Data_3,Transmission_Data_4;
@@ -32,7 +34,8 @@ char test_driver=0b11;
 struct Motor_Param 
 {
 	int Encoder;
-	signed long Err,d,d_last,i,p;
+	signed long Err,i,p;
+	float d,d_last;
 	float kp,ki,kd;
 	int Direction;
 	int RPM;
@@ -46,8 +49,6 @@ struct Motor_Param
 	int Feed_Back,Feed_Back_last;
 	int psin;
 }M;
-
-
 
 int main(void)
 {  
@@ -337,22 +338,37 @@ inline int PID_CTRL()
 {
 	kp=.20;
 	ki=0;
-	kd=0.07;
+	kd=7;
+	
+	int lim1=20;//this limit determine when M.kp should increase ,also when M.kd should change.
+	
 	M.Setpoint = setpoint ;
-	M.PID_Err = (setpoint)- M.RPM ;
+	M.PID_Err = (setpoint) - M.RPM ;
 	
 	
 	
-	if (abs(M.PID_Err - M.PID_Err_last) < 20 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > 20 && (M.kp<2.6 || (abs(M.RPM)>1900 && M.kp < 3.2)) &&  abs(M.RPM)>10) M.kp+=.001;
-	if (abs(M.PID_Err - M.PID_Err_last) < 20 && abs(M.PID_Err) > 700 && (M.kp<2.6 || abs(M.RPM)>1900) &&  abs(M.RPM)>10) M.kp+=.003;
+	if (abs(M.PID_Err - M.PID_Err_last) < 20 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim1 /*&& (M.kp<2.6 || (abs(M.RPM)>1900 && M.kp < 3.2))*/ &&  abs(M.RPM)>10) M.kp+=.001;
+	if (abs(M.PID_Err - M.PID_Err_last) < 20 && abs(M.PID_Err) > 700 && /*(M.kp<2.6 || abs(M.RPM)>1900) &&*/  abs(M.RPM)>10) M.kp+=.003;
 	//if (abs(M.PID_Err - M.PID_Err_last) < 20 && abs(M.PID_Err) > 30 && (M.kp<2.6 || (abs(M.RPM)>1900 && M.kp < 3.6)) &&  abs(M.RPM)>10 ) M.kp+=pow(log(M.PID_Err),3)/10000.0;
 
 	//if (M.psin > 80) M.kp-=.05;
 	if (abs (M.Setpoint_last - (setpoint)) > 5 ) 
 	{ 
-		if ((setpoint)>0 && M.Setpoint_last>(setpoint))M.kp = kp;
-		if ((setpoint)<0 && M.Setpoint_last<(setpoint))M.kp = kp;
+		if ((setpoint)>0 && M.Setpoint_last>(setpoint)) M.kp = kp ;
+		if ((setpoint)<0 && M.Setpoint_last<(setpoint)) M.kp = kp ;
 	}
+	
+	if (abs(setpoint - M.Setpoint_last) > lim1)
+	{
+		M.kd = 0 ;
+	}
+	else
+	{
+		M.kd = 7 ;
+	}
+	
+	
+	
 	if (abs(M.RPM)<50) M.kp = kp;
 	
 	M.p = (M.PID_Err) * M.kp;
@@ -492,16 +508,23 @@ ISR(TIMER1_OVF_vect)
 	{
 		counter++;
 	}
+	time_counter++;
+	if (time_counter == 10)
+	{
+		TIME++;
+		time_counter=0;
+	}
 	
 	T_20ms() ;
 	
 	M.RPM_last = M.RPM ; M.RPM=M.HSpeed;
+	M.RPM = M.RPM_last + _FILTER_CONST *( M.RPM - M.RPM_last ) ;
 	M.d_last=M.d; M.d= M.RPM - M.RPM_last ;
-	M.RPM = M.RPM_last + _FILTER_CONST *( M.d ) ;
-	M.d= M.d_last + _FILTER_PID_CONST *( M.d - M.d_last ) ;
+	//M.d= M.d_last + _FILTER_PID_CONST *( M.d - M.d_last ) ;
+	
 	if (counter>199)
 	{
-		M.PWM =  PID_CTRL();//PD_CTRL ( (M.RPM_setpointB & 0x0ff)|((M.RPM_setpointA<<8) & 0xff00), M.RPM , &M.Err , &M.d , &M.i ) ;//
+		M.PWM =  PID_CTRL();
 	}
 	
 				
@@ -531,9 +554,9 @@ void send_reply(void)
 {   
 	
 	Transmission_Data_1 = M.RPM;
-	Transmission_Data_2 = M.PID;
-	Transmission_Data_3 = M.kp;
-	Transmission_Data_4 = M.d;
+	Transmission_Data_2 = M.p;
+	Transmission_Data_3 = M.d;
+	Transmission_Data_4 = TIME;
 		
 	USART_send ('*');
 	
