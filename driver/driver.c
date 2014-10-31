@@ -21,7 +21,7 @@ int hall_flag=0,hall_dir=0;
 uint16_t counter=0;
 uint64_t TIME=0;
 int time_counter=0;
-int PWM;
+int PWM = 255;
 int usart_change;
 int Transmission_Data_1,Transmission_Data_2,Transmission_Data_3,Transmission_Data_4;
 int Motor_Free;
@@ -52,7 +52,6 @@ struct Motor_Param
 
 int main(void)
 {  
-	M.PWM=120;
 	slave_address=ADD0|(ADD1<<1);
 // Input/Output Ports initialization
 // Port B initialization
@@ -190,6 +189,7 @@ slave_address=ADD0|(ADD1<<1);
 asm("sei");
 DDRC|=(1<<PINC5);
 
+
     while(1)
     {
 		asm("wdr");
@@ -237,11 +237,16 @@ DDRC|=(1<<PINC5);
 
 
 
-void Motor_Update(uint8_t Speed, uint8_t Direction)
+void Motor_Update(int pwm)
 {
 	 unsigned char Hall_State;
 	 int Hall_Condition;
+	 uint8_t Speed;
+	 uint8_t Direction;
 	 asm("wdr");
+	 
+	 Direction = (pwm<0)?(1):(0);
+	 Speed = abs(pwm);
 	 Hall_State = (HALL3<<2)|(HALL2<<1)|(HALL1);
 	 LED_1  (HALL1);
 	 LED_2  (HALL2);
@@ -337,28 +342,58 @@ void Motor_Update(uint8_t Speed, uint8_t Direction)
 inline int PID_CTRL()
 {
 	kp=.20;
-	ki=0;
+
 	kd=7;
+	int pwm_top = 255;
 	
 	int lim1=20;//this limit determine when M.kp should increase ,also when M.kd should change.
-	
 	M.Setpoint = setpoint ;
-	M.PID_Err = (setpoint) - M.RPM ;
+	//switch ( TIME )
+	//{
+		//
+		//case 200:
+		//M.Setpoint=1000;
+		//break;
+		//
+		//case 400:
+		//M.Setpoint=2000;
+		//break;
+		//
+		//case 600:
+		//M.Setpoint=500;
+		//break;
+		//
+		//case 800:
+		//M.Setpoint=4000;
+		//break;
+		//
+		//case 1000:
+		//M.Setpoint=-4000;
+		//break;
+		//
+		//case 1200:
+		//M.Setpoint=500;
+		//break;
+		//
+		//case 1400:
+		//M.Setpoint=-500;
+		//break;
+		//
+	//}
 	
-	
+	M.PID_Err = (M.Setpoint) - M.RPM ;
 	
 	if (abs(M.PID_Err - M.PID_Err_last) < 20 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim1 /*&& (M.kp<2.6 || (abs(M.RPM)>1900 && M.kp < 3.2))*/ &&  abs(M.RPM)>10) M.kp+=.001;
 	if (abs(M.PID_Err - M.PID_Err_last) < 20 && abs(M.PID_Err) > 700 && /*(M.kp<2.6 || abs(M.RPM)>1900) &&*/  abs(M.RPM)>10) M.kp+=.003;
 	//if (abs(M.PID_Err - M.PID_Err_last) < 20 && abs(M.PID_Err) > 30 && (M.kp<2.6 || (abs(M.RPM)>1900 && M.kp < 3.6)) &&  abs(M.RPM)>10 ) M.kp+=pow(log(M.PID_Err),3)/10000.0;
 
-	//if (M.psin > 80) M.kp-=.05;
-	if (abs (M.Setpoint_last - (setpoint)) > 5 ) 
+	if (abs (M.Setpoint_last - (M.Setpoint)) > 5 ) 
 	{ 
-		if ((setpoint)>0 && M.Setpoint_last>(setpoint)) M.kp = kp ;
-		if ((setpoint)<0 && M.Setpoint_last<(setpoint)) M.kp = kp ;
+		if ((M.Setpoint)>0 && M.Setpoint_last>(M.Setpoint)) M.kp = kp ;
+		if ((M.Setpoint)<0 && M.Setpoint_last<(M.Setpoint)) M.kp = kp ;
 	}
 	
-	if (abs(setpoint - M.Setpoint_last) > lim1)
+	if (abs(M.Setpoint - M.Setpoint_last) > lim1)
 	{
 		M.kd = 0 ;
 	}
@@ -371,37 +406,31 @@ inline int PID_CTRL()
 	
 	if (abs(M.RPM)<50) M.kp = kp;
 	
-	M.p = (M.PID_Err) * M.kp;
-	M.i += M.PID_Err * ki * 0.1 ;
+	M.p = (M.PID_Err) * M.kp;	
 	
-	
-	M.p=(M.p>127)?(127):M.p;
-	M.p=(M.p<-127)?(-127):M.p;
-	
-	
-	M.i=(M.i>120)?(120):M.i;
-	M.i=(M.i<-120)?(-120):M.i;
+	M.p=(M.p>pwm_top)?(pwm_top):M.p;
+	M.p=(M.p<-pwm_top)?(-pwm_top):M.p;
 	
 	M.d=(M.d>2400)?(2400):M.d;
 	M.d=(M.d<-2400)?(2400):M.d;
 	
-	M.PID = M.i  + M.p - M.d * kd ;
+	M.PID =M.p - M.d * kd ;
 	
 	M.PID_last = M.PID_last ;
 	
-	if(M.PID>127)
-	M.PID=127;
-	if( M.PID<-127)
-	M.PID=-127;
+	if(M.PID>pwm_top)
+	M.PID=pwm_top;
+	if( M.PID<-pwm_top)
+	M.PID=-pwm_top;
 
 	M.PID_Err_last = M.PID_Err ;
 	M.Feed_Back_last = M.Feed_Back ;
-	M.Setpoint_last = setpoint ;
+	M.Setpoint_last = M.Setpoint ;
 	
-	if((setpoint)==0 && abs(M.RPM-(setpoint))<10)
+	if((M.Setpoint)==0 && abs(M.RPM-(M.Setpoint))<10)
 	return 0;
 		
-	return M.PID;
+	return M.PID ;
 	
 }
 
@@ -414,7 +443,7 @@ data=UDR0;
 
 if ((status & (FRAMING_ERROR | PARITY_ERROR | DATA_OVERRUN))==0)
 {
-	Motor_Update ( PWM , Motor_Direction ) ;
+	Motor_Update ( PWM ) ;
 	switch (pck_num)
 	{
 		case 0:
@@ -495,7 +524,7 @@ ISR(INT0_vect)
 ISR(PCINT2_vect)
 {
 	hall_flag ++ ;
-	Motor_Update ( PWM , Motor_Direction ) ;
+	Motor_Update ( PWM ) ;
 }
 
 
@@ -524,22 +553,10 @@ ISR(TIMER1_OVF_vect)
 	
 	if (counter>199)
 	{
-		M.PWM =  PID_CTRL();
+		PWM =  PID_CTRL();
 	}
 	
-				
-	if ( M.PWM<0)
-	{
-		Motor_Direction = 1 ;
-		PWM = -M.PWM*2;
-	}
-				
-	else if (M.PWM >=0)
-	{
-		PWM = M.PWM * 2 ;
-		Motor_Direction = 0 ;
-	}	
-	Motor_Update ( PWM , Motor_Direction ) ;
+	Motor_Update ( PWM ) ;
 }
 
 
@@ -554,8 +571,8 @@ void send_reply(void)
 {   
 	
 	Transmission_Data_1 = M.RPM;
-	Transmission_Data_2 = M.p;
-	Transmission_Data_3 = M.d;
+	Transmission_Data_2 = M.d;
+	Transmission_Data_3 = M.Setpoint;
 	Transmission_Data_4 = TIME;
 		
 	USART_send ('*');
