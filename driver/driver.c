@@ -230,7 +230,7 @@ DDRC|=(1<<PINC5);
 			adc_I=adc*8.65;//*34.732;	
 			adc_I = adc_I_1 + /*((0.01/(f+0.01))*/ (0.02*(float)(adc_I-adc_I_1));
 	
-			if (adc_I>=1500)
+			if (adc_I>=1200)
 			{
 				count++;
 				send_reply();
