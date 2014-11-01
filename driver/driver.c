@@ -34,7 +34,7 @@ char test_driver=0b11;
 struct Motor_Param 
 {
 	int Encoder;
-	signed long Err,i,p;
+	signed long Err,i,p,p_last;
 	float d,d_last;
 	float kp,ki,kd;
 	int Direction;
@@ -44,7 +44,7 @@ struct Motor_Param
 	int HSpeed;
 	int8_t RPM_setpointB;
 	int8_t RPM_setpointA;
-	signed int Setpoint , Setpoint_last ;
+	signed int Setpoint , Setpoint_last1 , Setpoint_last2 ;
 	int PID , PID_last , PID_Err , PID_Err_last ;
 	int Feed_Back,Feed_Back_last;
 	int psin;
@@ -188,7 +188,7 @@ slave_address=ADD0|(ADD1<<1);
 // Global enable interrupts
 asm("sei");
 DDRC|=(1<<PINC5);
-
+							M.Setpoint = 4260;
 
     while(1)
     {
@@ -339,70 +339,68 @@ void Motor_Update(int pwm)
 	}
 }
 
+int Break ;
 inline int PID_CTRL()
 {
 	kp=.20;
-
-	kd=7;
 	int pwm_top = 255;
-	
 	int lim1=20;//this limit determine when M.kp should increase ,also when M.kd should change.
-	M.Setpoint = setpoint ;
-	//switch ( TIME )
-	//{
-		//
-		//case 200:
-		//M.Setpoint=1000;
-		//break;
-		//
-		//case 400:
-		//M.Setpoint=2000;
-		//break;
-		//
-		//case 600:
-		//M.Setpoint=500;
-		//break;
-		//
-		//case 800:
-		//M.Setpoint=4000;
-		//break;
-		//
-		//case 1000:
-		//M.Setpoint=-4000;
-		//break;
-		//
-		//case 1200:
-		//M.Setpoint=500;
-		//break;
-		//
-		//case 1400:
-		//M.Setpoint=-500;
-		//break;
-		//
-	//}
+	int lim2=4;
+	//int Break ;
+	//M.Setpoint = setpoint ;
+	switch ( TIME )
+	{
+		
+		case 200:
+		M.Setpoint=1000;
+		break;
+		
+		case 400:
+		M.Setpoint=2000;
+		break;
+		
+		case 600:
+		M.Setpoint=500;
+		break;
+		
+		case 800:
+		M.Setpoint=4000;
+		break;
+		
+		case 1000:
+		M.Setpoint=-4000;
+		break;
+		
+		case 1200:
+		M.Setpoint=500;
+		break;
+		
+		case 1400:
+		M.Setpoint=-500;
+		break;
+		
+	}
 	
-	M.PID_Err = (M.Setpoint) - M.RPM ;
+	M.PID_Err = (M.Setpoint) - M.RPM + 20 *sign(M.Setpoint);
 	
-	if (abs(M.PID_Err - M.PID_Err_last) < 20 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim1 /*&& (M.kp<2.6 || (abs(M.RPM)>1900 && M.kp < 3.2))*/ &&  abs(M.RPM)>10) M.kp+=.001;
-	if (abs(M.PID_Err - M.PID_Err_last) < 20 && abs(M.PID_Err) > 700 && /*(M.kp<2.6 || abs(M.RPM)>1900) &&*/  abs(M.RPM)>10) M.kp+=.003;
-	//if (abs(M.PID_Err - M.PID_Err_last) < 20 && abs(M.PID_Err) > 30 && (M.kp<2.6 || (abs(M.RPM)>1900 && M.kp < 3.6)) &&  abs(M.RPM)>10 ) M.kp+=pow(log(M.PID_Err),3)/10000.0;
-
-	if (abs (M.Setpoint_last - (M.Setpoint)) > 5 ) 
+	if (abs(M.d) < 20 && abs(M.PID_Err) > 700 && abs(M.RPM)>10) M.kp+=.003;
+	if (abs(M.d) < 20 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim1 &&  abs(M.RPM)>10 ) M.kp+=.001;
+	if (abs(M.d) < lim2 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim2 &&  abs(M.RPM)>10 ) M.kp+=.001;
+	if (abs (M.Setpoint_last1 - (M.Setpoint)) > 5 ) 
 	{ 
-		if ((M.Setpoint)>0 && M.Setpoint_last>(M.Setpoint)) M.kp = kp ;
-		if ((M.Setpoint)<0 && M.Setpoint_last<(M.Setpoint)) M.kp = kp ;
+		if ((M.Setpoint)>0 && M.Setpoint_last1>(M.Setpoint)) M.kp = kp ;
+		if ((M.Setpoint)<0 && M.Setpoint_last1<(M.Setpoint)) M.kp = kp ;
 	}
 	
-	if (abs(M.Setpoint - M.Setpoint_last) > lim1)
-	{
-		M.kd = 0 ;
-	}
-	else
-	{
-		M.kd = 7 ;
-	}
-	
-	
+
+		if (abs(M.PID_Err) > 700)
+		{
+			M.kd = 0;
+		} 
+		else
+		{
+			M.kd = 2;
+		}
 	
 	if (abs(M.RPM)<50) M.kp = kp;
 	
@@ -414,18 +412,34 @@ inline int PID_CTRL()
 	M.d=(M.d>2400)?(2400):M.d;
 	M.d=(M.d<-2400)?(2400):M.d;
 	
-	M.PID =M.p - M.d * kd ;
+	M.PID =M.p - (int)(M.d * M.kd) ;
 	
-	M.PID_last = M.PID_last ;
+	//if (abs(M.PID_Err) < (abs(M.Setpoint_last1-M.Setpoint_last2)*2/10) && abs(M.PID_Err) > 80)
+	//{
+		//if (Break == 0)
+		//{
+			//M.PID = pwm_top * sign(-M.PID_Err);
+		//}
+	//}
+	//if (abs(M.PID_Err) < 80)
+	//{
+		//Break = 1;
+	//}
 	
 	if(M.PID>pwm_top)
 	M.PID=pwm_top;
 	if( M.PID<-pwm_top)
 	M.PID=-pwm_top;
-
+    M.PID_last = M.PID ;
+	M.p_last = M.p;
 	M.PID_Err_last = M.PID_Err ;
 	M.Feed_Back_last = M.Feed_Back ;
-	M.Setpoint_last = M.Setpoint ;
+	if (M.Setpoint_last1 != M.Setpoint )
+	{
+		M.Setpoint_last2 = M.Setpoint_last1 ;
+		Break = 0;
+	}
+	M.Setpoint_last1 = M.Setpoint ;
 	
 	if((M.Setpoint)==0 && abs(M.RPM-(M.Setpoint))<10)
 	return 0;
@@ -504,7 +518,7 @@ if ((status & (FRAMING_ERROR | PARITY_ERROR | DATA_OVERRUN))==0)
 			asm("wdr");
 			M.RPM_setpointA=tmp_rpmA;
 			M.RPM_setpointB=tmp_rpmB;
-			Motor_Free = data;
+			Motor_Free = '^';//data;//
 
 		}
 		pck_num=0;
@@ -571,10 +585,10 @@ void send_reply(void)
 {   
 	
 	Transmission_Data_1 = M.RPM;
-	Transmission_Data_2 = M.d;
-	Transmission_Data_3 = M.Setpoint;
+	Transmission_Data_2 = M.Setpoint_last2;
+	Transmission_Data_3 = Break;
 	Transmission_Data_4 = TIME;
-		
+
 	USART_send ('*');
 	
 	send_buff = ( ( ( (int) Transmission_Data_1 ) & 0x0ff00 ) >>8 ) ;
@@ -602,6 +616,21 @@ void send_reply(void)
 	USART_send ( send_buff ) ;
 		
 	USART_send ('#') ;
+}
+
+int sign (int number)
+{
+	if (number>0)
+	{
+		return 1;
+	}
+
+	if (number<0)
+	{
+		return -1;
+	}
+	
+	return 0;
 }
 
 
