@@ -417,31 +417,21 @@ inline int PID_CTRL()
 		if ((M.Setpoint)>0 && M.Setpoint_last1>(M.Setpoint)) M.kp = kp ;
 		if ((M.Setpoint)<0 && M.Setpoint_last1<(M.Setpoint)) M.kp = kp ;
 	}
-	
-
-		if (abs(M.PID_Err) > 50)
-		{
-			M.kd = 0;
-		} 
-		else
-		{
-			M.kd = 2;
-		}
 		
-		//if (M.Setpoint_track)
-		//{
-			//M.kd = 0 ;
-		//}
-		//if (M.Setpoint_miss)
-		//{
-			//M.kd = 50 ;
-		//}
-		//if (M.Setpoint_track)
-		//{
-			//M.kd = 2 ;
-		//}
+	if (M.Setpoint_track)
+	{
+		M.kd = 0 ;
+	}
+	if (M.Setpoint_miss)
+	{
+		M.kd = 50 ;
+	}
+	if (M.Setpoint_track)
+	{
+		M.kd = 2 ;
+	}
 		
-		if (abs(M.RPM)<50) M.kp = kp;
+	if (abs(M.RPM)<50) M.kp = kp;
 	
 	M.p = (M.PID_Err) * M.kp;	
 	
