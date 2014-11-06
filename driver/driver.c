@@ -464,7 +464,7 @@ inline int PID_CTRL()
 	M.d=(M.d>2400)?(2400):M.d;
 	M.d=(M.d<-2400)?(2400):M.d;
 	
-	M.PID =M.p - (int)(M.d * M.kd);
+	M.PID =M.p - (int)(M.d * M.kd) +M.i ;
 	
 	if(M.PID>pwm_top)
 	M.PID=pwm_top;
