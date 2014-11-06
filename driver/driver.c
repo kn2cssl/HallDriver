@@ -251,7 +251,7 @@ void Motor_Update(int pwm)
 	 asm("wdr");
 	 
 	 Direction = (pwm<0)?(1):(0);
-	 Speed = abs(pwm)*2;
+	 Speed = abs(pwm);
 	 Hall_State = (HALL3<<2)|(HALL2<<1)|(HALL1);
 	 LED_1  (HALL1);
 	 LED_2  (HALL2);
@@ -347,7 +347,7 @@ void Motor_Update(int pwm)
 inline int PID_CTRL()
 {
 	kp=.20;
-	int pwm_top = 127;
+	int pwm_top = 255;
 	int lim1 = 20;//this limit determine when M.kp should increase ,also when M.kd should change.
 	int lim2 = 4;
 	int lim3 = 300 ; // setpont_bridge limit : err larger than lim3 
@@ -407,53 +407,41 @@ inline int PID_CTRL()
 		}
 		
 	////////////////////////////////////////////////////////////////////////////
-	//
-	//
-	//if (abs(M.d) < 20 && abs(M.PID_Err) > 700 && abs(M.RPM)>10) M.kp+=.003;
-	//if (abs(M.d) < 20 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim1 &&  abs(M.RPM)>10 ) M.kp+=.001;
-	//if (abs(M.d) < lim2 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim2 &&  abs(M.RPM)>10 ) M.kp+=.001;
-	//if (abs (M.Setpoint_last1 - (M.Setpoint)) > 5 ) 
-	//{ 
-		//if ((M.Setpoint)>0 && M.Setpoint_last1>(M.Setpoint)) M.kp = kp ;
-		//if ((M.Setpoint)<0 && M.Setpoint_last1<(M.Setpoint)) M.kp = kp ;
-	//}
-	//
-//
-		////if (abs(M.PID_Err) > 50)
-		////{
-			////M.kd = 0;
-		////} 
-		////else
-		////{
-			////M.kd = 2;
-		////}
-		//
-		if (M.Setpoint_track)
+	
+	
+	if (abs(M.d) < 20 && abs(M.PID_Err) > 700 && abs(M.RPM)>10) M.kp+=.003;
+	if (abs(M.d) < 20 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim1 &&  abs(M.RPM)>10 ) M.kp+=.001;
+	if (abs(M.d) < lim2 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim2 &&  abs(M.RPM)>10 ) M.kp+=.001;
+	if (abs (M.Setpoint_last1 - (M.Setpoint)) > 5 )
+	{
+		if ((M.Setpoint)>0 && M.Setpoint_last1>(M.Setpoint)) M.kp = kp ;
+		if ((M.Setpoint)<0 && M.Setpoint_last1<(M.Setpoint)) M.kp = kp ;
+	}
+	
+
+		if (abs(M.PID_Err) > 50)
 		{
-			M.kd = 0 ;
-		}
-		if (M.Setpoint_miss)
+			M.kd = 0;
+		} 
+		else
 		{
-			M.kd = 50 ;
+			M.kd = 2;
 		}
-		if (M.Setpoint_track)
-		{
-			M.kd = 2 ;
-		}
+		
+		//if (M.Setpoint_track)
+		//{
+			//M.kd = 0 ;
+		//}
+		//if (M.Setpoint_miss)
+		//{
+			//M.kd = 50 ;
+		//}
+		//if (M.Setpoint_track)
+		//{
+			//M.kd = 2 ;
+		//}
 		
 		if (abs(M.RPM)<50) M.kp = kp;
-		
-	M.kp = .15;
-	M.ki = .65;
-	
-	(M.i)=(M.i)+(M.ki*M.PID_Err)*.001;
-
-
-	if ((M.i)>120)
-	(M.i)=120;
-	if ((M.i)<-120)
-	(M.i)=-120;	
-	
 	
 	M.p = (M.PID_Err) * M.kp;	
 	
@@ -463,7 +451,7 @@ inline int PID_CTRL()
 	M.d=(M.d>2400)?(2400):M.d;
 	M.d=(M.d<-2400)?(2400):M.d;
 	
-	M.PID =M.p - (int)(M.d * M.kd) +M.i ;
+	M.PID =M.p - (int)(M.d * M.kd) ;
 	
 	if(M.PID>pwm_top)
 	M.PID=pwm_top;
