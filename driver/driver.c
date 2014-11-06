@@ -429,23 +429,22 @@ inline int PID_CTRL()
 		////}
 		//
 		if (M.Setpoint_track)
-		//{
-			//M.kd = 0 ;
-		//}
-		//if (M.Setpoint_miss)
-		//{
-			//M.kd = 50 ;
-		//}
-		//if (M.Setpoint_track)
-		//{
-			//M.kd = 2 ;
-		//}
+		{
+			M.kd = 0 ;
+		}
+		if (M.Setpoint_miss)
+		{
+			M.kd = 50 ;
+		}
+		if (M.Setpoint_track)
+		{
+			M.kd = 2 ;
+		}
 		
-		//if (abs(M.RPM)<50) M.kp = kp;
+		if (abs(M.RPM)<50) M.kp = kp;
 		
 	M.kp = .15;
 	M.ki = .65;
-	M.kd = .05;	
 	
 	(M.i)=(M.i)+(M.ki*M.PID_Err)*.001;
 
