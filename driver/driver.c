@@ -346,11 +346,11 @@ void Motor_Update(int pwm)
 
 inline int PID_CTRL()
 {
-	kp=.20;
-	kp2=1;
+	kp=.20; //base kp for setpoints over 500 rpm
+	kp2=1; //base kp for setpoints below 500 rpm
 	int pwm_top = 255;
-	int lim1 = 20;//this limit determine when M.kp should increase ,also when M.kd should change.
-	int lim2 = 4;
+	int lim1 = 20; //this limit determine when M.kp should increase ,also when M.kd should change.
+	int lim2 = 4; //this limit determine accuracy of rpm 
 	int lim3 = 300 ; // setpont_bridge limit : err larger than lim3 
 	M.Setpoint = setpoint ;
 	//switch ( TIME )
@@ -455,9 +455,11 @@ inline int PID_CTRL()
 	//}
 	////////////////////////////////////////////////////////////////////////////
 	//stage.1 : input stage
+	// :)
 	M.PID_Err = (M.Setpoint) - M.RPM + 20 *sign(M.Setpoint);
 	////////////////////////////////////////////////////////////////////////////
 	//stage.2 : status determination  
+	// in this stage few conditions are specified which will be used in next stage.
 		if (M.setpoint_change == 1 &&  abs(M.PID_Err) > lim3)
 		{
 			M.setpoint_bridge = 1;
@@ -503,7 +505,7 @@ inline int PID_CTRL()
 		
 	if (M.Setpoint_track)
 	{
-		M.kd = 0 ;
+		M.kd = 0 ;// this kd 
 	}
 	if (M.Setpoint_miss)
 	{
@@ -532,6 +534,7 @@ inline int PID_CTRL()
 	}
 	////////////////////////////////////////////////////////////////////////////
 	//stage.4 : PD controller
+	//here we have a conventional pd controller  
 	M.p = (M.PID_Err) * M.kp;	
 	
 	M.p=(M.p>pwm_top)?(pwm_top):M.p;
@@ -548,6 +551,7 @@ inline int PID_CTRL()
 	M.PID=-pwm_top;
 	////////////////////////////////////////////////////////////////////////////
 	//stage.5 : data storage
+	// :)
     M.PID_last = M.PID ;
 	M.p_last = M.p;
 	M.PID_Err_last = M.PID_Err ;
@@ -562,6 +566,7 @@ inline int PID_CTRL()
 	M.Setpoint_last1 = M.Setpoint ;
 	////////////////////////////////////////////////////////////////////////////
 	//stage.6 : output stage
+	// the controller returns pwm. "if" term prevents robot from vibration when it should halt.
 	if((M.Setpoint)==0 && abs(M.RPM-(M.Setpoint))<10)
 	return 0;
 		
