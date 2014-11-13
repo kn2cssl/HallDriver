@@ -28,7 +28,7 @@ int Motor_Free;
 float ctrl_time=0.001;//0.020;
 int tmp_setpoint,tmp_rpmA,tmp_rpmB;
 unsigned char pck_num = 0;
-float RPM,kp,ki,kd;
+float RPM,kp,kp2,ki,kd;
 uint8_t Motor_Direction;
 char test_driver=0b11;
 struct Motor_Param 
@@ -347,12 +347,12 @@ void Motor_Update(int pwm)
 inline int PID_CTRL()
 {
 	kp=.20;
+	kp2=1;
 	int pwm_top = 255;
 	int lim1 = 20;//this limit determine when M.kp should increase ,also when M.kd should change.
 	int lim2 = 4;
 	int lim3 = 300 ; // setpont_bridge limit : err larger than lim3 
-	//int Break ;
-	//M.Setpoint = setpoint ;
+	M.Setpoint = setpoint ;
 	//switch ( TIME )
 	//{
 		//
@@ -453,10 +453,9 @@ inline int PID_CTRL()
 		//break;		
 		//
 	//}
-	M.Setpoint=50;
 	////////////////////////////////////////////////////////////////////////////
 	//stage.1 : input stage
-	M.PID_Err = (M.Setpoint) - M.RPM ;//+ 20 *sign(M.Setpoint);
+	M.PID_Err = (M.Setpoint) - M.RPM + 20 *sign(M.Setpoint);
 	////////////////////////////////////////////////////////////////////////////
 	//stage.2 : status determination  
 		if (M.setpoint_change == 1 &&  abs(M.PID_Err) > lim3)
@@ -478,16 +477,29 @@ inline int PID_CTRL()
 		
 	////////////////////////////////////////////////////////////////////////////
 	//stage.3 : kp & kd tuning
-	if (abs(M.d) < 20 && abs(M.PID_Err) > 700 && abs(M.RPM)>10) M.kp+=.003;
-	if (abs(M.d) < 20 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim1 &&  abs(M.RPM)>10 ) M.kp+=.001;
-	if (abs(M.d) < lim2 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim2 &&  abs(M.RPM)>10  && abs(M.Setpoint) > 499 ) M.kp+=.001;
-	
+	if (abs(M.Setpoint) - abs(M.RPM) > 0)
+	{
+			if (abs(M.d) < 20 && abs(M.PID_Err) > 700 && abs(M.RPM)>10) M.kp+=.003;
+			if (abs(M.d) < 20 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim1 &&  abs(M.RPM)>10 ) M.kp+=.001;
+			if (abs(M.d) < lim2 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim2 &&  abs(M.RPM)>10  && abs(M.Setpoint) > 499 ) M.kp+=.001;
+			if (abs(M.d) < lim2 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim2 && abs(M.Setpoint) < 499 ) M.kp+=.0001;
+	}
+	else
+	{
+			if (abs(M.d) < 20 && abs(M.PID_Err) > 700 && abs(M.RPM)>10) M.kp-=.003;
+			if (abs(M.d) < 20 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim1 &&  abs(M.RPM)>10 ) M.kp-=.009;
+			if (abs(M.d) < lim2 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim2 &&  abs(M.RPM)>10  && abs(M.Setpoint) > 499 ) M.kp-=.02;
+			if (abs(M.d) < lim2 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim2 && abs(M.Setpoint) < 499 ) M.kp-=.0001;
+			if (M.kp < kp ) M.kp = kp ;
+	}
 
-	if (abs (M.Setpoint_last1 - (M.Setpoint)) > 5 )  
+
+	if (abs (M.Setpoint_last1 - (M.Setpoint)) > 50 )  
 	{
 		if ((M.Setpoint)>0 && M.Setpoint_last1>(M.Setpoint)) M.kp = kp ;
 		if ((M.Setpoint)<0 && M.Setpoint_last1<(M.Setpoint)) M.kp = kp ;
 	}
+	
 		
 	if (M.Setpoint_track)
 	{
@@ -506,7 +518,18 @@ inline int PID_CTRL()
 		}
 	}
 		
-	if (abs(M.RPM)<50) M.kp = 1;kp;
+	if (abs(M.RPM)<50) 
+	{
+			if (M.Setpoint > 499)
+			{
+				M.kp = kp;
+			}
+			else
+			{
+				M.kp = kp2;
+			}
+		
+	}
 	////////////////////////////////////////////////////////////////////////////
 	//stage.4 : PD controller
 	M.p = (M.PID_Err) * M.kp;	
@@ -616,7 +639,7 @@ if ((status & (FRAMING_ERROR | PARITY_ERROR | DATA_OVERRUN))==0)
 			asm("wdr");
 			M.RPM_setpointA=tmp_rpmA;
 			M.RPM_setpointB=tmp_rpmB;
-			Motor_Free = '^';//data;//
+			Motor_Free = data;//
 
 		}
 		pck_num=0;
