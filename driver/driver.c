@@ -353,42 +353,112 @@ inline int PID_CTRL()
 	int lim3 = 300 ; // setpont_bridge limit : err larger than lim3 
 	//int Break ;
 	//M.Setpoint = setpoint ;
-	switch ( TIME )
-	{
-		
-		case 200:
-		M.Setpoint=1000;
-		break;
-		
-		case 400:
-		M.Setpoint=2000;
-		break;
-		
-		case 600:
-		M.Setpoint=500;
-		break;
-		
-		case 800:
-		M.Setpoint=4000;
-		break;
-		
-		case 1000:
-		M.Setpoint=-4000;
-		break;
-		
-		case 1200:
-		M.Setpoint=500;
-		break;
-		
-		case 1400:
-		M.Setpoint=-500;
-		break;
-		
-	}
-	
-	M.PID_Err = (M.Setpoint) - M.RPM + 20 *sign(M.Setpoint);
-	
+	//switch ( TIME )
+	//{
+		//
+		//case 200:
+		//M.Setpoint=1000;
+		//break;
+		//
+		//case 400:
+		//M.Setpoint=2000;
+		//break;
+		//
+		//case 600:
+		//M.Setpoint=500;
+		//break;
+		//
+		//case 800:
+		//M.Setpoint=4000;
+		//break;
+		//
+		//case 1000:
+		//M.Setpoint=-4000;
+		//break;
+		//
+		//case 1200:
+		//M.Setpoint=500;
+		//break;
+		//
+		//case 1400:
+		//M.Setpoint=-500;
+		//break;
+		//
+		//case 1600:
+		//M.Setpoint=400;
+		//break;
+		//
+		//case 1800:
+		//M.Setpoint=350;
+		//break;
+		//
+		//case 2000:
+		//M.Setpoint=340;
+		//break;
+		//
+		//case 2200:
+		//M.Setpoint=330;
+		//break;
+		//
+		//case 2600:
+		//M.Setpoint=100;
+		//break;
+		//
+		//case 2800:
+		//M.Setpoint=90;
+		//break;
+		//
+		//case 3000:
+		//M.Setpoint=80;
+		//break;
+		//
+		//case 3200:
+		//M.Setpoint=70;
+		//break;
+		//
+		//case 3400:
+		//M.Setpoint=60;
+		//break;
+		//
+		//case 3600:
+		//M.Setpoint=50;
+		//break;
+		//
+		//case 3800:
+		//M.Setpoint=40;
+		//break;
+		//
+		//case 4000:
+		//M.Setpoint=30;
+		//break;
+		//
+		//case 4200:
+		//M.Setpoint=20;
+		//break;
+		//
+		//case 4400:
+		//M.Setpoint=10;
+		//break;
+		//
+		//case 4600:
+		//M.Setpoint=0;
+		//break;
+		//
+		//case 5000:
+		//M.Setpoint=1000;
+		//break;
+		//
+		//case 5500:
+		//M.Setpoint=0;
+		//break;		
+		//
+	//}
+	M.Setpoint=50;
 	////////////////////////////////////////////////////////////////////////////
+	//stage.1 : input stage
+	M.PID_Err = (M.Setpoint) - M.RPM ;//+ 20 *sign(M.Setpoint);
+	////////////////////////////////////////////////////////////////////////////
+	//stage.2 : status determination  
 		if (M.setpoint_change == 1 &&  abs(M.PID_Err) > lim3)
 		{
 			M.setpoint_bridge = 1;
@@ -407,12 +477,13 @@ inline int PID_CTRL()
 		}
 		
 	////////////////////////////////////////////////////////////////////////////
-	
-	
+	//stage.3 : kp & kd tuning
 	if (abs(M.d) < 20 && abs(M.PID_Err) > 700 && abs(M.RPM)>10) M.kp+=.003;
 	if (abs(M.d) < 20 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim1 &&  abs(M.RPM)>10 ) M.kp+=.001;
-	if (abs(M.d) < lim2 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim2 &&  abs(M.RPM)>10 ) M.kp+=.001;
-	if (abs (M.Setpoint_last1 - (M.Setpoint)) > 5 )
+	if (abs(M.d) < lim2 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim2 &&  abs(M.RPM)>10  && abs(M.Setpoint) > 499 ) M.kp+=.001;
+	
+
+	if (abs (M.Setpoint_last1 - (M.Setpoint)) > 5 )  
 	{
 		if ((M.Setpoint)>0 && M.Setpoint_last1>(M.Setpoint)) M.kp = kp ;
 		if ((M.Setpoint)<0 && M.Setpoint_last1<(M.Setpoint)) M.kp = kp ;
@@ -429,10 +500,15 @@ inline int PID_CTRL()
 	if (M.Setpoint_track)
 	{
 		M.kd = 2 ;
+		if (M.Setpoint < 500)
+		{
+			M.kd = 1 ;
+		}
 	}
 		
-	if (abs(M.RPM)<50) M.kp = kp;
-	
+	if (abs(M.RPM)<50) M.kp = 1;kp;
+	////////////////////////////////////////////////////////////////////////////
+	//stage.4 : PD controller
 	M.p = (M.PID_Err) * M.kp;	
 	
 	M.p=(M.p>pwm_top)?(pwm_top):M.p;
@@ -447,6 +523,8 @@ inline int PID_CTRL()
 	M.PID=pwm_top;
 	if( M.PID<-pwm_top)
 	M.PID=-pwm_top;
+	////////////////////////////////////////////////////////////////////////////
+	//stage.5 : data storage
     M.PID_last = M.PID ;
 	M.p_last = M.p;
 	M.PID_Err_last = M.PID_Err ;
@@ -458,10 +536,9 @@ inline int PID_CTRL()
 		M.setpoint_change = 1;
 		M.Setpoint_track = 0;
 	}
-	
-
 	M.Setpoint_last1 = M.Setpoint ;
-	
+	////////////////////////////////////////////////////////////////////////////
+	//stage.6 : output stage
 	if((M.Setpoint)==0 && abs(M.RPM-(M.Setpoint))<10)
 	return 0;
 		
@@ -606,8 +683,8 @@ void send_reply(void)
 {   
 	
 	Transmission_Data_1 = M.RPM;
-	Transmission_Data_2 = M.p;
-	Transmission_Data_3 = M.PID;
+	Transmission_Data_2 = M.kp;
+	Transmission_Data_3 = M.Setpoint;
 	Transmission_Data_4 = TIME;
 
 	USART_send ('*');
