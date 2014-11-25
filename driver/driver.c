@@ -522,7 +522,7 @@ inline int PID_CTRL()
 		
 	if (abs(M.RPM)<50) 
 	{
-			if (M.Setpoint > 499)
+			if (abs(M.Setpoint) > 499)
 			{
 				M.kp = kp;
 			}
