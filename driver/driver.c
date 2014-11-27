@@ -35,6 +35,7 @@ struct Motor_Param
 {
 	int Encoder;
 	signed long Err,p,p_last;
+	int8_t p_overflow;
 	float i;
 	float d,d_last;
 	float kp,ki,kd;
@@ -351,6 +352,7 @@ inline int PID_CTRL()
 	int lim1 = 20; //this limit determine when M.kp should increase ,also when M.kd should change.
 	int lim2 = 4; //this limit determine accuracy of rpm 
 	int lim3 = 300 ; // setpont_bridge limit : err larger than lim3 
+	int lim4 = 400;
 	M.Setpoint = setpoint ;
 	//switch ( TIME )
 	//{
@@ -478,28 +480,35 @@ inline int PID_CTRL()
 		
 	////////////////////////////////////////////////////////////////////////////
 	//stage.3 : kp & kd tuning
-	if (abs(M.Setpoint) - abs(M.RPM) > 0)
-	{
-			if (abs(M.d) < 20 && abs(M.PID_Err) > 700 && abs(M.RPM)>10) M.kp+=.003;
-			if (abs(M.d) < 20 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim1 &&  abs(M.RPM)>10 ) M.kp+=.001;
-			if (abs(M.d) < lim2 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim2 &&  abs(M.RPM)>10  && abs(M.Setpoint) > 499 ) M.kp+=.001;
-			if (abs(M.d) < lim2 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim2 && abs(M.Setpoint) < 499 ) M.kp+=.0001;
-	}
-	else
-	{
-			if (abs(M.d) < 20 && abs(M.PID_Err) > 700 && abs(M.RPM)>10) M.kp-=.003;
-			if (abs(M.d) < 20 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim1 &&  abs(M.RPM)>10 ) M.kp-=.009;
-			if (abs(M.d) < lim2 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim2 &&  abs(M.RPM)>10  && abs(M.Setpoint) > 499 ) M.kp-=.02;
-			if (abs(M.d) < lim2 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > lim2 && abs(M.Setpoint) < 499 ) M.kp-=.0001;
+// 	if (abs(M.Setpoint) - abs(M.RPM) > 0)
+// 	{
+		if (M.p_overflow == 0)
+		{
+			if (abs(M.d) < 20 && abs(M.PID_Err) > lim4 && abs(M.RPM)>10) M.kp+=.003;
+			if (abs(M.d) < 20 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim1 &&  abs(M.RPM)>10 ) M.kp+=.001;
+			if (abs(M.d) < lim2 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 &&  abs(M.RPM)>10  && abs(M.Setpoint) > 499 ) M.kp+=.001;
+			if (abs(M.d) < lim2 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 && abs(M.Setpoint) < 499 ) M.kp+=.0001;
+		}
+// 	}
+// 	else
+// 	{
+		if (M.p_overflow == 1 && abs(M.RPM) > abs(M.Setpoint))
+		{
+			if (abs(M.d) < 20 && abs(M.PID_Err) > lim4 && abs(M.RPM)>10) M.kp-=.003;
+			if (abs(M.d) < 20 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim1 &&  abs(M.RPM)>10 ) M.kp-=.009;
+			if (abs(M.d) < lim2 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 &&  abs(M.RPM)>10  && abs(M.Setpoint) > 499 ) M.kp-=.02;
+			if (abs(M.d) < lim2 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 && abs(M.Setpoint) < 499 ) M.kp-=.0001;
 			if (M.kp < kp ) M.kp = kp ;
-	}
+		}
+			
+	//}
 
 
-	if (abs (M.Setpoint_last1 - (M.Setpoint)) > 50 )  
-	{
-		if ((M.Setpoint)>0 && M.Setpoint_last1>(M.Setpoint)) M.kp = kp ;
-		if ((M.Setpoint)<0 && M.Setpoint_last1<(M.Setpoint)) M.kp = kp ;
-	}
+	//if (abs (M.Setpoint_last1 - (M.Setpoint)) > 50 )  
+	//{
+		//if ((M.Setpoint)>0 && M.RPM-M.Setpoint>50) M.kp = kp ;
+		//if ((M.Setpoint)<0 && M.RPM-M.Setpoint<-50) M.kp = kp ;
+	//}
 	
 		
 	if (M.Setpoint_track)
@@ -536,8 +545,12 @@ inline int PID_CTRL()
 	//here we have a conventional pd controller  
 	M.p = (M.PID_Err) * M.kp;	
 	
-	M.p=(M.p>pwm_top)?(pwm_top):M.p;
-	M.p=(M.p<-pwm_top)?(-pwm_top):M.p;
+	M.p_overflow = 0;
+	if (abs(M.p) > pwm_top)
+	{
+		M.p = sign(M.p) * pwm_top ;
+		M.p_overflow = 1;
+	}
 	
 	M.d=(M.d>2400)?(2400):M.d;
 	M.d=(M.d<-2400)?(2400):M.d;
@@ -710,7 +723,7 @@ void send_reply(void)
 {   
 	
 	Transmission_Data_1 = abs(M.RPM);
-	Transmission_Data_2 = M.kp;
+	Transmission_Data_2 = M.kp*100;
 	Transmission_Data_3 = abs(M.Setpoint);
 	Transmission_Data_4 = TIME;
 
