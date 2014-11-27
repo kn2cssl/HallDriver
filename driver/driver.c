@@ -193,7 +193,6 @@ slave_address=ADD0|(ADD1<<1);
 // Global enable interrupts
 asm("sei");
 DDRC|=(1<<PINC5);
-							M.Setpoint = 4260;
 
     while(1)
     {
@@ -710,9 +709,9 @@ void T_20ms(void)
 void send_reply(void)
 {   
 	
-	Transmission_Data_1 = M.RPM;
+	Transmission_Data_1 = abs(M.RPM);
 	Transmission_Data_2 = M.kp;
-	Transmission_Data_3 = M.Setpoint;
+	Transmission_Data_3 = abs(M.Setpoint);
 	Transmission_Data_4 = TIME;
 
 	USART_send ('*');
