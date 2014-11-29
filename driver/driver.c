@@ -40,20 +40,19 @@ struct Motor_Param
 	float d,d_last;
 	float kp,ki,kd;
 	int Direction;
+	int sin_counter;
 	int RPM;
 	int RPM_last;
 	int PWM;
 	int HSpeed;
 	int8_t RPM_setpointB;
 	int8_t RPM_setpointA;
-	signed int Setpoint , Setpoint_last1 , Setpoint_last2 ;
-	int PID , PID_last , PID_Err , PID_Err_last ;
-	int Feed_Back,Feed_Back_last;
-	int psin;
-	int setpoint_change;
-	int setpoint_bridge;
-	int Setpoint_miss;
-	int Setpoint_track;
+	signed int Setpoint , Setpoint_last , Setpoint_d ;
+	int PID , PID_last , PID_Err , PID_Err_last , PID_Err_d;
+	int8_t Setpoint_change;
+	int8_t Setpoint_bridge;
+	int8_t Setpoint_miss;
+	int8_t Setpoint_track;
 }M;
 
 int main(void)
@@ -457,18 +456,19 @@ inline int PID_CTRL()
 	////////////////////////////////////////////////////////////////////////////
 	//stage.1 : input stage
 	// :)
-	M.PID_Err = (M.Setpoint) - M.RPM + 20 *sign(M.Setpoint);
+	M.Setpoint_d = M.Setpoint - M.Setpoint_last ;
+	M.PID_Err = M.Setpoint - M.RPM + 20 *sign(M.Setpoint);
 	////////////////////////////////////////////////////////////////////////////
 	//stage.2 : status determination  
 	// in this stage few conditions are specified which will be used in next stage.
-		if (M.setpoint_change == 1 &&  abs(M.PID_Err) > lim3)
+		if (M.Setpoint_change == 1 &&  abs(M.PID_Err) > lim3)
 		{
-			M.setpoint_bridge = 1;
+			M.Setpoint_bridge = 1;
 		}
 		
-		if (M.setpoint_bridge == 1 && abs(M.PID_Err) < lim3)
+		if (M.Setpoint_bridge == 1 && abs(M.PID_Err) < lim3)
 		{
-			M.setpoint_bridge = 0;
+			M.Setpoint_bridge = 0;
 			M.Setpoint_miss = 1;
 		}
 		
@@ -477,11 +477,11 @@ inline int PID_CTRL()
 			M.Setpoint_miss = 0;
 			M.Setpoint_track = 1;
 		}
+
 		
 	////////////////////////////////////////////////////////////////////////////
 	//stage.3 : kp & kd tuning
-// 	if (abs(M.Setpoint) - abs(M.RPM) > 0)
-// 	{
+
 		if (M.p_overflow == 0)
 		{
 			if (abs(M.d) < 20 && abs(M.PID_Err) > lim4 && abs(M.RPM)>10) M.kp+=.003;
@@ -489,26 +489,36 @@ inline int PID_CTRL()
 			if (abs(M.d) < lim2 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 &&  abs(M.RPM)>10  && abs(M.Setpoint) > 499 ) M.kp+=.001;
 			if (abs(M.d) < lim2 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 && abs(M.Setpoint) < 499 ) M.kp+=.0001;
 		}
-// 	}
-// 	else
-// 	{
+
 		if (M.p_overflow == 1 && abs(M.RPM) > abs(M.Setpoint))
 		{
-			if (abs(M.d) < 20 && abs(M.PID_Err) > lim4 && abs(M.RPM)>10) M.kp-=.003;
 			if (abs(M.d) < 20 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim1 &&  abs(M.RPM)>10 ) M.kp-=.009;
 			if (abs(M.d) < lim2 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 &&  abs(M.RPM)>10  && abs(M.Setpoint) > 499 ) M.kp-=.02;
 			if (abs(M.d) < lim2 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 && abs(M.Setpoint) < 499 ) M.kp-=.0001;
 			if (M.kp < kp ) M.kp = kp ;
 		}
-			
-	//}
-
-
-	//if (abs (M.Setpoint_last1 - (M.Setpoint)) > 50 )  
-	//{
-		//if ((M.Setpoint)>0 && M.RPM-M.Setpoint>50) M.kp = kp ;
-		//if ((M.Setpoint)<0 && M.RPM-M.Setpoint<-50) M.kp = kp ;
-	//}
+		
+		if (abs(M.kp * M.PID_Err) > pwm_top)
+		{
+			M.kp = fabs((float)(pwm_top+10) / (float)M.PID_Err) ;
+		}
+		
+	if (abs(M.RPM)<50)
+	{
+		if (abs(M.Setpoint) > 499)
+		{
+			M.kp = kp;
+		}
+		else
+		{
+			M.kp = kp2;
+		}
+		
+	}
+	if (abs(M.Setpoint_d) > abs(M.d) && abs(M.PID_Err) > 200)
+	{
+		M.kp = M.kp + abs(M.Setpoint_d - M.d)*.01;
+	}
 	
 		
 	if (M.Setpoint_track)
@@ -528,18 +538,6 @@ inline int PID_CTRL()
 		}
 	}
 		
-	if (abs(M.RPM)<50) 
-	{
-			if (abs(M.Setpoint) > 499)
-			{
-				M.kp = kp;
-			}
-			else
-			{
-				M.kp = kp2;
-			}
-		
-	}
 	////////////////////////////////////////////////////////////////////////////
 	//stage.4 : PD controller
 	//here we have a conventional pd controller  
@@ -567,15 +565,13 @@ inline int PID_CTRL()
     M.PID_last = M.PID ;
 	M.p_last = M.p;
 	M.PID_Err_last = M.PID_Err ;
-	M.Feed_Back_last = M.Feed_Back ;
-	M.setpoint_change = 0;
-	if (M.Setpoint_last1 != M.Setpoint )
+	M.Setpoint_change = 0;
+	if (M.Setpoint_last != M.Setpoint )
 	{
-		M.Setpoint_last2 = M.Setpoint_last1 ;
-		M.setpoint_change = 1;
+		M.Setpoint_change = 1;
 		M.Setpoint_track = 0;
 	}
-	M.Setpoint_last1 = M.Setpoint ;
+	M.Setpoint_last = M.Setpoint ;
 	////////////////////////////////////////////////////////////////////////////
 	//stage.6 : output stage
 	// the controller returns pwm. "if" term prevents robot from vibration when it should halt.
