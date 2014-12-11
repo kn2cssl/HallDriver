@@ -348,111 +348,11 @@ inline int PID_CTRL()
 	kp=.20; //base kp for setpoints over 500 rpm
 	kp2=1; //base kp for setpoints below 500 rpm
 	int pwm_top = 255;
-	int lim1 = 20; //this limit determine when M.kp should increase ,also when M.kd should change.
-	int lim2 = 4; //this limit determine accuracy of rpm 
+	int lim1 = 15; //this limit determine when M.kp should increase ,also when M.kd should change.
+	int lim2 = 10; //this limit determine accuracy of rpm 
 	int lim3 = 300 ; // setpont_bridge limit : err larger than lim3 
 	int lim4 = 400;
 	M.Setpoint = setpoint ;
-	//switch ( TIME )
-	//{
-		//
-		//case 200:
-		//M.Setpoint=1000;
-		//break;
-		//
-		//case 400:
-		//M.Setpoint=2000;
-		//break;
-		//
-		//case 600:
-		//M.Setpoint=500;
-		//break;
-		//
-		//case 800:
-		//M.Setpoint=4000;
-		//break;
-		//
-		//case 1000:
-		//M.Setpoint=-4000;
-		//break;
-		//
-		//case 1200:
-		//M.Setpoint=500;
-		//break;
-		//
-		//case 1400:
-		//M.Setpoint=-500;
-		//break;
-		//
-		//case 1600:
-		//M.Setpoint=400;
-		//break;
-		//
-		//case 1800:
-		//M.Setpoint=350;
-		//break;
-		//
-		//case 2000:
-		//M.Setpoint=340;
-		//break;
-		//
-		//case 2200:
-		//M.Setpoint=330;
-		//break;
-		//
-		//case 2600:
-		//M.Setpoint=100;
-		//break;
-		//
-		//case 2800:
-		//M.Setpoint=90;
-		//break;
-		//
-		//case 3000:
-		//M.Setpoint=80;
-		//break;
-		//
-		//case 3200:
-		//M.Setpoint=70;
-		//break;
-		//
-		//case 3400:
-		//M.Setpoint=60;
-		//break;
-		//
-		//case 3600:
-		//M.Setpoint=50;
-		//break;
-		//
-		//case 3800:
-		//M.Setpoint=40;
-		//break;
-		//
-		//case 4000:
-		//M.Setpoint=30;
-		//break;
-		//
-		//case 4200:
-		//M.Setpoint=20;
-		//break;
-		//
-		//case 4400:
-		//M.Setpoint=10;
-		//break;
-		//
-		//case 4600:
-		//M.Setpoint=0;
-		//break;
-		//
-		//case 5000:
-		//M.Setpoint=1000;
-		//break;
-		//
-		//case 5500:
-		//M.Setpoint=0;
-		//break;		
-		//
-	//}
 	////////////////////////////////////////////////////////////////////////////
 	//stage.1 : input stage
 	// :)
@@ -484,16 +384,16 @@ inline int PID_CTRL()
 
 		if (M.p_overflow == 0)
 		{
-			if (abs(M.d) < 20 && abs(M.PID_Err) > lim4 && abs(M.RPM)>10) M.kp+=.003;
-			if (abs(M.d) < 20 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim1 &&  abs(M.RPM)>10 ) M.kp+=.001;
-			if (abs(M.d) < lim2 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 &&  abs(M.RPM)>10  && abs(M.Setpoint) > 499 ) M.kp+=.001;
-			if (abs(M.d) < lim2 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 && abs(M.Setpoint) < 499 ) M.kp+=.0001;
+			if (abs(M.d) < 15 && abs(M.PID_Err) > lim4 && abs(M.RPM)>10) M.kp+=.003;
+			if (abs(M.d) < 15 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim1 &&  abs(M.RPM)>10 ) M.kp+=.001;
+			//if (abs(M.d) < M.Setpoint_d && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 && abs(M.RPM)>10  && abs(M.Setpoint) > 499 ) M.kp+=.001;
+			//if (abs(M.d) < M.Setpoint_d && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 && abs(M.Setpoint) < 499 ) M.kp+=.0001;
 		}
 
-		if (M.p_overflow == 1 && abs(M.RPM) > abs(M.Setpoint))
+		if (abs(M.RPM) > abs(M.Setpoint))
 		{
-			if (abs(M.d) < 20 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim1 &&  abs(M.RPM)>10 ) M.kp-=.009;
-			if (abs(M.d) < lim2 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 &&  abs(M.RPM)>10  && abs(M.Setpoint) > 499 ) M.kp-=.02;
+			//if (abs(M.d) < 20 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim1 &&  abs(M.RPM)>10 ) M.kp-=.009;
+			if (abs(M.d) < lim2 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 &&  abs(M.RPM)>10  && abs(M.Setpoint) > 499 ) M.kp-=.007;
 			if (abs(M.d) < lim2 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 && abs(M.Setpoint) < 499 ) M.kp-=.0001;
 			if (M.kp < kp ) M.kp = kp ;
 		}
@@ -514,6 +414,10 @@ inline int PID_CTRL()
 			M.kp = kp2;
 		}
 		
+	}
+	if (abs(M.Setpoint)<500)
+	{
+		M.kp = 1;
 	}
 	if (abs(M.Setpoint_d) > abs(M.d) && abs(M.PID_Err) > 200)
 	{
