@@ -250,7 +250,7 @@ void Motor_Update(int pwm)
 	 asm("wdr");
 	 
 	 Direction = (pwm<0)?(1):(0);
-	 Speed = abs(pwm);
+	 Speed = abs(pwm)*2;
 	 Hall_State = (HALL3<<2)|(HALL2<<1)|(HALL1);
 	 LED_1  (HALL1);
 	 LED_2  (HALL2);
@@ -342,7 +342,7 @@ void Motor_Update(int pwm)
 
 	}
 }
-
+/*
 inline int PID_CTRL()
 {
 	kp=.20; //base kp for setpoints over 500 rpm
@@ -485,7 +485,62 @@ inline int PID_CTRL()
 	return M.PID ;
 	
 }
+*/
 
+inline int PID_CTRL()
+{
+	kp=.20;
+	ki=0;
+	kd=0.07;
+	M.Setpoint = setpoint ;
+	M.PID_Err = (setpoint)- M.RPM ;
+	
+	
+	
+	if (abs(M.PID_Err - M.PID_Err_last) < 20 && abs(M.PID_Err) < 700 && abs(M.PID_Err) > 20 && (M.kp<2.6 || (abs(M.RPM)>1900 && M.kp < 3.2)) &&  abs(M.RPM)>10) M.kp+=.001;
+	if (abs(M.PID_Err - M.PID_Err_last) < 20 && abs(M.PID_Err) > 700 && (M.kp<2.6 || abs(M.RPM)>1900) &&  abs(M.RPM)>10) M.kp+=.003;
+	//if (abs(M.PID_Err - M.PID_Err_last) < 20 && abs(M.PID_Err) > 30 && (M.kp<2.6 || (abs(M.RPM)>1900 && M.kp < 3.6)) &&  abs(M.RPM)>10 ) M.kp+=pow(log(M.PID_Err),3)/10000.0;
+
+	//if (M.psin > 80) M.kp-=.05;
+	if (abs (M.Setpoint_last - (setpoint)) > 5 )
+	{
+		if ((setpoint)>0 && M.Setpoint_last>(setpoint))M.kp = kp;
+		if ((setpoint)<0 && M.Setpoint_last<(setpoint))M.kp = kp;
+	}
+	if (abs(M.RPM)<50) M.kp = kp;
+	
+	M.p = (M.PID_Err) * M.kp;
+	M.i += M.PID_Err * ki * 0.1 ;
+	
+	M.p=(M.p>127)?(127):M.p;
+	M.p=(M.p<-127)?(-127):M.p;
+	
+	
+	M.i=(M.i>120)?(120):M.i;
+	M.i=(M.i<-120)?(-120):M.i;
+	
+	M.d=(M.d>2400)?(2400):M.d;
+	M.d=(M.d<-2400)?(2400):M.d;
+	
+	M.PID = M.i  + M.p - M.d * kd ;
+	
+	M.PID_last = M.PID_last ;
+	
+	if(M.PID>127)
+	M.PID=127;
+	if( M.PID<-127)
+	M.PID=-127;
+
+	M.PID_Err_last = M.PID_Err ;
+	//M.Feed_Back_last = M.Feed_Back ;
+	M.Setpoint_last = setpoint ;
+	
+	if((setpoint)==0 && abs(M.RPM-(setpoint))<10)
+	return 0;
+	
+	return M.PID;
+	
+}
 
 ISR(USART_RX_vect)
 {
