@@ -17,8 +17,8 @@
 char slave_address=0;
 char send_buff;
 char str[100];
+bool reset_notification = true;
 int hall_flag=0,hall_dir=0;
-uint16_t counter=0;
 uint64_t TIME=0;
 int time_counter=0;
 int PWM = 255;
@@ -31,6 +31,7 @@ unsigned char pck_num = 0;
 float RPM,kp,kp2,ki,kd;
 uint8_t Motor_Direction;
 char test_driver=0b11;
+
 struct Motor_Param 
 {
 	int Encoder;
@@ -259,10 +260,6 @@ void Motor_Update(int pwm)
 	 if (Motor_Free == '%')
 	 {
 		 Hall_Condition = 7 ;
-		 if (counter<200)
-		 {
-			Hall_Condition = Hall_State | ((Direction<<3)&0x8); 
-		 }
 	 }
 	 else
 	 {
@@ -415,10 +412,12 @@ inline int PID_CTRL()
 		}
 		
 	}
+	
 	if (abs(M.Setpoint)<500)
 	{
 		M.kp = 1;
 	}
+	
 	if (abs(M.Setpoint_d) > abs(M.d) && abs(M.PID_Err) > 200)
 	{
 		M.kp = M.kp + abs(M.Setpoint_d - M.d)*.01;
@@ -427,12 +426,14 @@ inline int PID_CTRL()
 		
 	if (M.Setpoint_track)
 	{
-		M.kd = 0 ;// this kd 
+		M.kd = 0 ;
 	}
+	
 	if (M.Setpoint_miss)
 	{
 		M.kd = 50 ;
 	}
+	
 	if (M.Setpoint_track)
 	{
 		M.kd = 2 ;
@@ -526,22 +527,22 @@ if ((status & (FRAMING_ERROR | PARITY_ERROR | DATA_OVERRUN))==0)
 		pck_num++;
 		break;
 		
+		//case 10:
+		//kp = (float)data/100.0; //Robot_D[RobotID].P
+		//pck_num++;
+		//break;
+		//
+		//case 11:
+		//ki = (float)data/100.0; //Robot_D[RobotID].I
+		//pck_num++;
+		//break;
+		//
+		//case 12:
+		//kd = (float)data/100.0; //Robot_D[RobotID].D
+		//pck_num++;
+		//break;
+		
 		case 10:
-		kp = (float)data/100.0; //Robot_D[RobotID].P
-		pck_num++;
-		break;
-		
-		case 11:
-		ki = (float)data/100.0; //Robot_D[RobotID].I
-		pck_num++;
-		break;
-		
-		case 12:
-		kd = (float)data/100.0; //Robot_D[RobotID].D
-		pck_num++;
-		break;
-		
-		case 13:
 		if (test_driver != data)
 		{
 			usart_change=0;
@@ -550,13 +551,13 @@ if ((status & (FRAMING_ERROR | PARITY_ERROR | DATA_OVERRUN))==0)
 		pck_num++;
 		break;
 		
-		case 14:
+		case 11:
 		if(data == '%' || data == '^')// free wheel : %
 		{																		 
 			asm("wdr");
 			M.RPM_setpointA=tmp_rpmA;
 			M.RPM_setpointB=tmp_rpmB;
-			Motor_Free = data;//
+			Motor_Free = data;
 
 		}
 		pck_num=0;
@@ -585,11 +586,8 @@ ISR(TIMER1_OVF_vect)
 	TCNT1H=0xfc;
 	TCNT1L=0x17;
 	
-	if (counter<200)
-	{
-		counter++;
-	}
 	time_counter++;
+	
 	if (time_counter == 10)
 	{
 		TIME++;
@@ -601,12 +599,8 @@ ISR(TIMER1_OVF_vect)
 	M.RPM_last = M.RPM ; M.RPM=M.HSpeed;
 	M.RPM = M.RPM_last + _FILTER_CONST *( M.RPM - M.RPM_last ) ;
 	M.d_last=M.d; M.d= M.RPM - M.RPM_last ;
-	//M.d= M.d_last + _FILTER_PID_CONST *( M.d - M.d_last ) ;
 	
-	if (counter>199)
-	{
-		PWM =  PID_CTRL();
-	}
+	PWM =  PID_CTRL();
 	
 	Motor_Update ( PWM ) ;
 }
@@ -618,7 +612,7 @@ void T_20ms(void)
 	M.HSpeed = ( hall_dir ) ? - M.HSpeed : M.HSpeed ;
 	hall_flag = 0 ;
 }
-
+int counter=0;
 void send_reply(void)
 {   
 	
@@ -626,6 +620,22 @@ void send_reply(void)
 	Transmission_Data_2 = M.kp*100;
 	Transmission_Data_3 = abs(M.Setpoint);
 	Transmission_Data_4 = TIME;
+	
+	if (counter>10)
+	{
+		reset_notification = false;
+	}
+		
+											
+	if (reset_notification)						
+	{		
+										
+			Transmission_Data_1 = '1';		
+			Transmission_Data_2 = '2';		
+			Transmission_Data_3 = '3';		
+			Transmission_Data_4 = '4';
+			counter++;
+	}
 
 	USART_send ('*');
 	
