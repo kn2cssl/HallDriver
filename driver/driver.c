@@ -616,9 +616,9 @@ int counter=0;
 void send_reply(void)
 {   
 	
-	Transmission_Data_1 = abs(M.RPM);
+	Transmission_Data_1 = M.RPM;
 	Transmission_Data_2 = M.kp*100;
-	Transmission_Data_3 = abs(M.Setpoint);
+	Transmission_Data_3 = M.Setpoint;
 	Transmission_Data_4 = TIME;
 	
 	if (counter>10)
