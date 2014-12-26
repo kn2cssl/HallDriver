@@ -17,8 +17,8 @@
 char slave_address=0;
 char send_buff;
 char str[100];
+bool reset_notification = true;
 int hall_flag=0,hall_dir=0;
-uint16_t counter=0;
 uint64_t TIME=0;
 int time_counter=0;
 int PWM = 255;
@@ -31,6 +31,7 @@ unsigned char pck_num = 0;
 float RPM,kp,kp2,ki,kd;
 uint8_t Motor_Direction;
 char test_driver=0b11;
+
 struct Motor_Param 
 {
 	int Encoder;
@@ -259,10 +260,6 @@ void Motor_Update(int pwm)
 	 if (Motor_Free == '%')
 	 {
 		 Hall_Condition = 7 ;
-		 if (counter<200)
-		 {
-			Hall_Condition = Hall_State | ((Direction<<3)&0x8); 
-		 }
 	 }
 	 else
 	 {
@@ -342,155 +339,10 @@ void Motor_Update(int pwm)
 
 	}
 }
-/*
-inline int PID_CTRL()
-{
-	kp=.20; //base kp for setpoints over 500 rpm
-	kp2=1; //base kp for setpoints below 500 rpm
-	int pwm_top = 255;
-	int lim1 = 15; //this limit determine when M.kp should increase ,also when M.kd should change.
-	int lim2 = 10; //this limit determine accuracy of rpm 
-	int lim3 = 300 ; // setpont_bridge limit : err larger than lim3 
-	int lim4 = 400;
-	M.Setpoint = setpoint ;
-	////////////////////////////////////////////////////////////////////////////
-	//stage.1 : input stage
-	// :)
-	M.Setpoint_d = M.Setpoint - M.Setpoint_last ;
-	M.PID_Err = M.Setpoint - M.RPM + 20 *sign(M.Setpoint);
-	////////////////////////////////////////////////////////////////////////////
-	//stage.2 : status determination  
-	// in this stage few conditions are specified which will be used in next stage.
-		if (M.Setpoint_change == 1 &&  abs(M.PID_Err) > lim3)
-		{
-			M.Setpoint_bridge = 1;
-		}
-		
-		if (M.Setpoint_bridge == 1 && abs(M.PID_Err) < lim3)
-		{
-			M.Setpoint_bridge = 0;
-			M.Setpoint_miss = 1;
-		}
-		
-		if (M.Setpoint_miss == 1 && sign(M.d_last) != sign(M.d))
-		{
-			M.Setpoint_miss = 0;
-			M.Setpoint_track = 1;
-		}
-
-		
-	////////////////////////////////////////////////////////////////////////////
-	//stage.3 : kp & kd tuning
-
-		if (M.p_overflow == 0)
-		{
-			if (abs(M.d) < 15 && abs(M.PID_Err) > lim4 && abs(M.RPM)>10) M.kp+=.003;
-			if (abs(M.d) < 15 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim1 &&  abs(M.RPM)>10 ) M.kp+=.001;
-			//if (abs(M.d) < M.Setpoint_d && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 && abs(M.RPM)>10  && abs(M.Setpoint) > 499 ) M.kp+=.001;
-			//if (abs(M.d) < M.Setpoint_d && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 && abs(M.Setpoint) < 499 ) M.kp+=.0001;
-		}
-
-		if (abs(M.RPM) > abs(M.Setpoint))
-		{
-			//if (abs(M.d) < 20 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim1 &&  abs(M.RPM)>10 ) M.kp-=.009;
-			if (abs(M.d) < lim2 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 &&  abs(M.RPM)>10  && abs(M.Setpoint) > 499 ) M.kp-=.007;
-			if (abs(M.d) < lim2 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 && abs(M.Setpoint) < 499 ) M.kp-=.0001;
-			if (M.kp < kp ) M.kp = kp ;
-		}
-		
-		if (abs(M.kp * M.PID_Err) > pwm_top)
-		{
-			M.kp = fabs((float)(pwm_top+10) / (float)M.PID_Err) ;
-		}
-		
-	if (abs(M.RPM)<50)
-	{
-		if (abs(M.Setpoint) > 499)
-		{
-			M.kp = kp;
-		}
-		else
-		{
-			M.kp = kp2;
-		}
-		
-	}
-	if (abs(M.Setpoint)<500)
-	{
-		M.kp = 1;
-	}
-	if (abs(M.Setpoint_d) > abs(M.d) && abs(M.PID_Err) > 200)
-	{
-		M.kp = M.kp + abs(M.Setpoint_d - M.d)*.01;
-	}
-	
-		
-	if (M.Setpoint_track)
-	{
-		M.kd = 0 ;// this kd 
-	}
-	if (M.Setpoint_miss)
-	{
-		M.kd = 50 ;
-	}
-	if (M.Setpoint_track)
-	{
-		M.kd = 2 ;
-		if (M.Setpoint < 500)
-		{
-			M.kd = 1 ;
-		}
-	}
-		
-	////////////////////////////////////////////////////////////////////////////
-	//stage.4 : PD controller
-	//here we have a conventional pd controller  
-	M.p = (M.PID_Err) * M.kp;	
-	
-	M.p_overflow = 0;
-	if (abs(M.p) > pwm_top)
-	{
-		M.p = sign(M.p) * pwm_top ;
-		M.p_overflow = 1;
-	}
-	
-	M.d=(M.d>2400)?(2400):M.d;
-	M.d=(M.d<-2400)?(2400):M.d;
-	
-	M.PID =M.p - (int)(M.d * M.kd) ;
-	
-	if(M.PID>pwm_top)
-	M.PID=pwm_top;
-	if( M.PID<-pwm_top)
-	M.PID=-pwm_top;
-	////////////////////////////////////////////////////////////////////////////
-	//stage.5 : data storage
-	// :)
-    M.PID_last = M.PID ;
-	M.p_last = M.p;
-	M.PID_Err_last = M.PID_Err ;
-	M.Setpoint_change = 0;
-	if (M.Setpoint_last != M.Setpoint )
-	{
-		M.Setpoint_change = 1;
-		M.Setpoint_track = 0;
-	}
-	M.Setpoint_last = M.Setpoint ;
-	////////////////////////////////////////////////////////////////////////////
-	//stage.6 : output stage
-	// the controller returns pwm. "if" term prevents robot from vibration when it should halt.
-	if((M.Setpoint)==0 && abs(M.RPM-(M.Setpoint))<10)
-	return 0;
-		
-	return M.PID ;
-	
-}
-*/
 
 inline int PID_CTRL()
 {
 	kp=.20;
-	ki=0;
 	kd=0.07;
 	M.Setpoint = setpoint ;
 	M.PID_Err = (setpoint)- M.RPM ;
@@ -514,15 +366,11 @@ inline int PID_CTRL()
 	
 	M.p=(M.p>127)?(127):M.p;
 	M.p=(M.p<-127)?(-127):M.p;
-	
-	
-	M.i=(M.i>120)?(120):M.i;
-	M.i=(M.i<-120)?(-120):M.i;
-	
+
 	M.d=(M.d>2400)?(2400):M.d;
 	M.d=(M.d<-2400)?(2400):M.d;
 	
-	M.PID = M.i  + M.p - M.d * kd ;
+	M.PID =M.p - M.d * kd ;
 	
 	M.PID_last = M.PID_last ;
 	
@@ -581,22 +429,22 @@ if ((status & (FRAMING_ERROR | PARITY_ERROR | DATA_OVERRUN))==0)
 		pck_num++;
 		break;
 		
+		//case 10:
+		//kp = (float)data/100.0; //Robot_D[RobotID].P
+		//pck_num++;
+		//break;
+		//
+		//case 11:
+		//ki = (float)data/100.0; //Robot_D[RobotID].I
+		//pck_num++;
+		//break;
+		//
+		//case 12:
+		//kd = (float)data/100.0; //Robot_D[RobotID].D
+		//pck_num++;
+		//break;
+		
 		case 10:
-		kp = (float)data/100.0; //Robot_D[RobotID].P
-		pck_num++;
-		break;
-		
-		case 11:
-		ki = (float)data/100.0; //Robot_D[RobotID].I
-		pck_num++;
-		break;
-		
-		case 12:
-		kd = (float)data/100.0; //Robot_D[RobotID].D
-		pck_num++;
-		break;
-		
-		case 13:
 		if (test_driver != data)
 		{
 			usart_change=0;
@@ -605,13 +453,13 @@ if ((status & (FRAMING_ERROR | PARITY_ERROR | DATA_OVERRUN))==0)
 		pck_num++;
 		break;
 		
-		case 14:
+		case 11:
 		if(data == '%' || data == '^')// free wheel : %
 		{																		 
 			asm("wdr");
 			M.RPM_setpointA=tmp_rpmA;
 			M.RPM_setpointB=tmp_rpmB;
-			Motor_Free = data;//
+			Motor_Free = data;
 
 		}
 		pck_num=0;
@@ -640,11 +488,8 @@ ISR(TIMER1_OVF_vect)
 	TCNT1H=0xfc;
 	TCNT1L=0x17;
 	
-	if (counter<200)
-	{
-		counter++;
-	}
 	time_counter++;
+	
 	if (time_counter == 10)
 	{
 		TIME++;
@@ -656,12 +501,8 @@ ISR(TIMER1_OVF_vect)
 	M.RPM_last = M.RPM ; M.RPM=M.HSpeed;
 	M.RPM = M.RPM_last + _FILTER_CONST *( M.RPM - M.RPM_last ) ;
 	M.d_last=M.d; M.d= M.RPM - M.RPM_last ;
-	//M.d= M.d_last + _FILTER_PID_CONST *( M.d - M.d_last ) ;
 	
-	if (counter>199)
-	{
-		PWM =  PID_CTRL();
-	}
+	PWM =  PID_CTRL();
 	
 	Motor_Update ( PWM ) ;
 }
@@ -673,14 +514,30 @@ void T_20ms(void)
 	M.HSpeed = ( hall_dir ) ? - M.HSpeed : M.HSpeed ;
 	hall_flag = 0 ;
 }
-
+int counter=0;
 void send_reply(void)
 {   
 	
-	Transmission_Data_1 = abs(M.RPM);
+	Transmission_Data_1 = M.RPM;
 	Transmission_Data_2 = M.kp*100;
-	Transmission_Data_3 = abs(M.Setpoint);
+	Transmission_Data_3 = M.Setpoint;
 	Transmission_Data_4 = TIME;
+	
+	if (counter>10)
+	{
+		reset_notification = false;
+	}
+		
+											
+	if (reset_notification)						
+	{		
+										
+			Transmission_Data_1 = '1';		
+			Transmission_Data_2 = '2';		
+			Transmission_Data_3 = '3';		
+			Transmission_Data_4 = '4';
+			counter++;
+	}
 
 	USART_send ('*');
 	
