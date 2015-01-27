@@ -28,7 +28,7 @@ int hall_flag=0,hall_dir=0;
 
 uint64_t TIME=0;
 int time_counter=0;
-int PWM = 255;
+int PWM ;
 int usart_change;
 int Transmission_Data_1,Transmission_Data_2,Transmission_Data_3,Transmission_Data_4;
 int Motor_Free;
