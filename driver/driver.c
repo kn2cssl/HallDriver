@@ -448,7 +448,7 @@ inline int PID_CTRL()
 		if (abs(M.RPM) > abs(M.Setpoint))
 		{
 			//if (abs(M.d) < 20 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim1 &&  abs(M.RPM)>10 ) M.kp-=.009;
-			if (abs(M.d) < lim2 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 &&  abs(M.RPM)>10  && abs(M.Setpoint) > 499 ) M.kp-=.007;
+			if (abs(M.d) < lim2 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 && abs(M.RPM)>10  && abs(M.Setpoint) > 499 ) M.kp-=.007;
 			if (abs(M.d) < lim2 && abs(M.PID_Err) < lim4 && abs(M.PID_Err) > lim2 && abs(M.Setpoint) < 499 ) M.kp-=.0001;
 			if (M.kp < kp ) M.kp = kp ;
 		}
@@ -482,10 +482,10 @@ inline int PID_CTRL()
 	}
 	
 		
-	if (M.Setpoint_track)
-	{
-		M.kd = 0 ;
-	}
+// 	if (M.Setpoint_track)
+// 	{
+// 		M.kd = 0 ;
+// 	}
 	
 	if (M.Setpoint_miss)
 	{
@@ -495,7 +495,7 @@ inline int PID_CTRL()
 	if (M.Setpoint_track)
 	{
 		M.kd = 2 ;
-		if (M.Setpoint < 500)
+		if (abs(M.Setpoint) < 500)
 		{
 			M.kd = 1 ;
 		}
@@ -525,9 +525,9 @@ inline int PID_CTRL()
 	////////////////////////////////////////////////////////////////////////////
 	//stage.5 : data storage
 	// :)
-    M.PID_last = M.PID ;
-	M.p_last = M.p;
-	M.PID_Err_last = M.PID_Err ;
+    //M.PID_last = M.PID ;
+	//M.p_last = M.p;
+	//M.PID_Err_last = M.PID_Err ;
 	M.Setpoint_change = 0;
 	if (M.Setpoint_last != M.Setpoint )
 	{
