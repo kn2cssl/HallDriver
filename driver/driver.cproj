@@ -18,41 +18,41 @@
     <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
-    <OverrideVtorValue />
+    <OverrideVtorValue>exception_table</OverrideVtorValue>
     <eraseonlaunchrule>0</eraseonlaunchrule>
     <AsfVersion>2.9.0</AsfVersion>
     <AsfFrameworkConfig>
       <framework-data>
-  <options>
-    <option id="mega.drivers.adc" value="Add" config="" content-id="Atmel.ASF" />
-    <option id="common.boards" value="Add" config="" content-id="Atmel.ASF" />
-    <option id="mega.drivers.ioport" value="Add" config="" content-id="Atmel.ASF" />
-    <option id="common.utils.interrupt" value="Add" config="" content-id="Atmel.ASF" />
-    <option id="mega.drivers.cpu" value="Add" config="" content-id="Atmel.ASF" />
-  </options>
-  <configurations />
-  <files>
-    <file path="src/asf/common/boards/board.h" framework="" version="" source="common\boards\board.h" changed="False" content-id="Atmel.ASF" />
-    <file path="src/asf/mega/drivers/cpu/mega_reset_cause.h" framework="" version="" source="mega\drivers\cpu\mega_reset_cause.h" changed="False" content-id="Atmel.ASF" />
-    <file path="src/asf/common/services/ioport/ioport.h" framework="" version="" source="common\services\ioport\ioport.h" changed="False" content-id="Atmel.ASF" />
-    <file path="src/asf/common/services/ioport/mega/ioport.h" framework="" version="" source="common\services\ioport\mega\ioport.h" changed="False" content-id="Atmel.ASF" />
-    <file path="src/asf/common/utils/interrupt.h" framework="" version="" source="common\utils\interrupt.h" changed="False" content-id="Atmel.ASF" />
-    <file path="src/asf/common/utils/interrupt/interrupt_avr8.h" framework="" version="" source="common\utils\interrupt\interrupt_avr8.h" changed="False" content-id="Atmel.ASF" />
-    <file path="src/asf/common/utils/parts.h" framework="" version="" source="common\utils\parts.h" changed="False" content-id="Atmel.ASF" />
-    <file path="src/asf/mega/drivers/adc/adc.h" framework="" version="" source="mega\drivers\adc\adc.h" changed="False" content-id="Atmel.ASF" />
-    <file path="src/asf/mega/drivers/adc/adc_megaxx8.h" framework="" version="" source="mega\drivers\adc\adc_megaxx8.h" changed="False" content-id="Atmel.ASF" />
-    <file path="src/asf/mega/utils/compiler.h" framework="" version="" source="mega\utils\compiler.h" changed="False" content-id="Atmel.ASF" />
-    <file path="src/asf/mega/utils/status_codes.h" framework="" version="" source="mega\utils\status_codes.h" changed="False" content-id="Atmel.ASF" />
-    <file path="src/asf/mega/utils/progmem.h" framework="" version="" source="mega\utils\progmem.h" changed="False" content-id="Atmel.ASF" />
-    <file path="src/asf/mega/utils/assembler.h" framework="" version="" source="mega\utils\assembler.h" changed="False" content-id="Atmel.ASF" />
-    <file path="src/asf/mega/utils/assembler/gas.h" framework="" version="" source="mega\utils\assembler\gas.h" changed="False" content-id="Atmel.ASF" />
-  </files>
-  <documentation help="" />
-  <offline-documentation help="" />
-  <dependencies>
-    <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.6.0" />
-  </dependencies>
-</framework-data>
+        <options>
+          <option id="mega.drivers.adc" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="common.boards" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="mega.drivers.ioport" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="common.utils.interrupt" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="mega.drivers.cpu" value="Add" config="" content-id="Atmel.ASF" />
+        </options>
+        <configurations />
+        <files>
+          <file path="src/asf/common/boards/board.h" framework="" version="" source="common\boards\board.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/mega/drivers/cpu/mega_reset_cause.h" framework="" version="" source="mega\drivers\cpu\mega_reset_cause.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/services/ioport/ioport.h" framework="" version="" source="common\services\ioport\ioport.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/services/ioport/mega/ioport.h" framework="" version="" source="common\services\ioport\mega\ioport.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/utils/interrupt.h" framework="" version="" source="common\utils\interrupt.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/utils/interrupt/interrupt_avr8.h" framework="" version="" source="common\utils\interrupt\interrupt_avr8.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/utils/parts.h" framework="" version="" source="common\utils\parts.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/mega/drivers/adc/adc.h" framework="" version="" source="mega\drivers\adc\adc.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/mega/drivers/adc/adc_megaxx8.h" framework="" version="" source="mega\drivers\adc\adc_megaxx8.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/mega/utils/compiler.h" framework="" version="" source="mega\utils\compiler.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/mega/utils/status_codes.h" framework="" version="" source="mega\utils\status_codes.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/mega/utils/progmem.h" framework="" version="" source="mega\utils\progmem.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/mega/utils/assembler.h" framework="" version="" source="mega\utils\assembler.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/mega/utils/assembler/gas.h" framework="" version="" source="mega\utils\assembler\gas.h" changed="False" content-id="Atmel.ASF" />
+        </files>
+        <documentation help="" />
+        <offline-documentation help="" />
+        <dependencies>
+          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.6.0" />
+        </dependencies>
+      </framework-data>
     </AsfFrameworkConfig>
     <avrtoolinterface />
     <avrtool>com.atmel.avrdbg.tool.simulator</avrtool>
@@ -73,7 +73,7 @@
     </com_atmel_avrdbg_tool_simulator>
     <CacheFlash>true</CacheFlash>
     <ProgFlashFromRam>true</ProgFlashFromRam>
-    <RamSnippetAddress />
+    <RamSnippetAddress>0x20000000</RamSnippetAddress>
     <UncachedRange />
     <BootSegment>2</BootSegment>
   </PropertyGroup>
