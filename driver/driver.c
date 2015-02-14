@@ -642,7 +642,7 @@ ISR(PCINT2_vect)
 ISR(TIMER1_OVF_vect)
 {
 	TCNT1H=0xfc;
-	TCNT1L=0x17;
+	TCNT1L=0x18;
 	t++;
 	if (t>=10)
 	{
@@ -651,7 +651,7 @@ ISR(TIMER1_OVF_vect)
 	}
 	
 	time_counter++;
-	
+
 	if (time_counter == 10)
 	{
 		TIME++;
